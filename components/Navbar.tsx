@@ -48,7 +48,7 @@ export default function Navbar() {
                   <a
                     key={item}
                     href={href}
-                    className="px-3.5 py-1.5 rounded-lg text-[13px] font-medium text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-all duration-200"
+                    className="px-3.5 py-1.5 rounded-lg text-[13px] font-medium text-zinc-400 hover:text-white hover:bg-white/6 transition-all duration-200"
                   >
                     {item}
                   </a>
@@ -59,7 +59,7 @@ export default function Navbar() {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
-            <button className="px-4 py-1.5 rounded-lg text-[13px] font-semibold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-all duration-200">
+            <button className="px-4 py-1.5 rounded-lg text-[13px] font-semibold text-zinc-300 hover:text-white hover:bg-white/6 transition-all duration-200">
               Sign In
             </button>
             <button className="px-5 py-2 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-[13px] transition-all duration-300 shadow-md shadow-purple-600/20 hover:shadow-purple-500/30 hover:scale-[1.02] active:scale-[0.98]">
@@ -70,7 +70,7 @@ export default function Navbar() {
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+            className="md:hidden p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/6 transition-colors"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? (
@@ -99,7 +99,7 @@ export default function Navbar() {
                     key={item}
                     href={href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="px-3 py-2.5 rounded-xl text-[15px] font-medium text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-all"
+                    className="px-3 py-2.5 rounded-xl text-[15px] font-medium text-zinc-300 hover:text-white hover:bg-white/6 transition-all"
                   >
                     {item}
                   </a>

@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
-import { Zap, ArrowRight, Play, Sparkles, Volume2 } from "lucide-react";
+import React, { useState } from "react";
+import { Zap, ArrowRight, Play, Sparkles, Volume2, X } from "lucide-react";
 
 export default function Hero() {
+  const [showDemoModal, setShowDemoModal] = useState(false);
   return (
     <section className="relative pt-28 pb-24 md:pt-36 md:pb-36 max-w-7xl mx-auto px-6 flex flex-col items-center text-center">
       {/* Glow pill */}
@@ -31,8 +32,11 @@ export default function Hero() {
           Start Editing Free
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </a>
-        <button className="px-8 py-4 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800/80 hover:border-zinc-700 text-zinc-300 hover:text-white font-bold text-base transition-all flex items-center justify-center gap-2">
-          Watch 2m Demo
+        <button 
+          onClick={() => setShowDemoModal(true)}
+          className="px-8 py-4 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800/80 hover:border-zinc-700 text-zinc-300 hover:text-white font-bold text-base transition-all flex items-center justify-center gap-2"
+        >
+          Watch Demo
           <Play className="w-4 h-4 fill-zinc-400" />
         </button>
       </div>
@@ -168,6 +172,41 @@ export default function Hero() {
 
         </div>
       </div>
+
+      {/* Demo Video Modal */}
+      {showDemoModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+          onClick={() => setShowDemoModal(false)}
+        >
+          <div 
+            className="relative w-full max-w-4xl rounded-2xl border border-zinc-800/80 bg-zinc-950 p-2 shadow-2xl transition-all duration-300 scale-100 flex flex-col gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-3 py-1.5 border-b border-zinc-900/60">
+              <span className="text-xs font-semibold text-zinc-400">Edito.ai Product Walkthrough</span>
+              <button 
+                onClick={() => setShowDemoModal(false)}
+                className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/6 transition-colors"
+                aria-label="Close modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            {/* Video Player */}
+            <div className="rounded-xl overflow-hidden aspect-video relative border border-zinc-800 bg-black flex items-center justify-center">
+              <video 
+                src="/Modern_SaaS_product_demo_video.mp4" 
+                controls 
+                autoPlay 
+                className="w-full h-full object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
