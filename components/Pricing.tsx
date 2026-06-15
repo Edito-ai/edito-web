@@ -7,6 +7,11 @@ export default function Pricing() {
   const [sliderVideos, setSliderVideos] = useState(15);
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("yearly");
 
+  const handleActionClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.dispatchEvent(new Event("show-building-popup"));
+  };
+
   return (
     <section id="pricing" className="py-24 bg-zinc-950/20 border-y border-zinc-800/40 scroll-mt-20">
       <div className="max-w-7xl mx-auto px-6">
@@ -91,7 +96,10 @@ export default function Pricing() {
                 <li className="flex items-center gap-2 text-zinc-600"><X className="w-3.5 h-3.5 shrink-0" /> No team share folders</li>
               </ul>
             </div>
-            <button className="w-full mt-8 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm transition-colors border border-zinc-800">
+            <button
+              onClick={handleActionClick}
+              className="w-full mt-8 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm transition-colors border border-zinc-800"
+            >
               Get Started Free
             </button>
           </div>
@@ -117,7 +125,10 @@ export default function Pricing() {
                 <li className="flex items-center gap-2 text-zinc-500"><Check className="w-3.5 h-3.5 text-purple-500 shrink-0" /> 1080p full rendering formats</li>
               </ul>
             </div>
-            <button className="w-full mt-8 py-3 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm transition-all shadow-md shadow-purple-600/10">
+            <button
+              onClick={handleActionClick}
+              className="w-full mt-8 py-3 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm transition-all shadow-md shadow-purple-600/10"
+            >
               Unlock Pro Access
             </button>
           </div>
@@ -142,7 +153,10 @@ export default function Pricing() {
                 <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-purple-500 shrink-0" /> Multi-user shared team folder</li>
               </ul>
             </div>
-            <button className="w-full mt-8 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm transition-colors border border-zinc-800">
+            <button
+              onClick={handleActionClick}
+              className="w-full mt-8 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm transition-colors border border-zinc-800"
+            >
               Contact Sales
             </button>
           </div>

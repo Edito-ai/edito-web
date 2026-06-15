@@ -4,6 +4,11 @@ import React from "react";
 import { ShieldCheck, Award, Check } from "lucide-react";
 
 export default function CTASection() {
+  const handleActionClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.dispatchEvent(new Event("show-building-popup"));
+  };
+
   return (
     <section className="py-24 max-w-5xl mx-auto px-6 text-center">
       <div className="p-10 md:p-16 rounded-3xl border border-zinc-800 bg-linear-to-b from-zinc-950 to-[#0b0b0d] relative overflow-hidden shadow-2xl">
@@ -22,7 +27,10 @@ export default function CTASection() {
             placeholder="Enter your email address..."
             className="px-5 py-3 rounded-full text-sm font-medium bg-zinc-900 border border-zinc-800 focus:outline-none focus:border-purple-500 w-full sm:w-[280px]"
           />
-          <button className="px-6 py-3 rounded-full bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm transition-all shadow-md shadow-purple-600/15">
+          <button
+            onClick={handleActionClick}
+            className="px-6 py-3 rounded-full bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm transition-all shadow-md shadow-purple-600/15"
+          >
             Start Free Trial
           </button>
         </div>
