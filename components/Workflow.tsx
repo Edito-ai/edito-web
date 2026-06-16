@@ -8,7 +8,7 @@ export default function Workflow() {
       <div className="text-center max-w-3xl mx-auto mb-20">
         <span className="text-purple-400 text-sm font-extrabold uppercase tracking-widest mb-3 block">STEP-BY-STEP WORKFLOW</span>
         <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
-          How Edito Syncs Content
+          How Stedio Syncs Content
         </h2>
         <p className="text-zinc-400 text-base">
           Create high-converting, fully customized publications with minimal manual adjustments.

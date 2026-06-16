@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -33,9 +35,10 @@ export default function LoginPage() {
       }
 
       // Store token and redirect
-      localStorage.setItem("edito_token", data.token);
-      localStorage.setItem("edito_user", JSON.stringify(data.user));
-      window.location.href = "/";
+      localStorage.setItem("stedio_token", data.token);
+      localStorage.setItem("stedio_user", JSON.stringify(data.user));
+      window.dispatchEvent(new Event("auth-change"));
+      router.push("/");
     } catch {
       setError("Unable to connect to server");
       setLoading(false);
@@ -63,11 +66,11 @@ export default function LoginPage() {
         <div className="flex justify-center mb-10">
           <Link href="/" className="transition-opacity hover:opacity-80">
             <Image
-              src="/logo_dark.png"
-              alt="edito.ai"
+              src="/logo_dark_v3.png"
+              alt="stedio.ai"
               width={140}
               height={35}
-              className="h-8 w-auto object-contain"
+              className="h-20 w-auto object-contain"
               priority
             />
           </Link>
@@ -86,7 +89,7 @@ export default function LoginPage() {
               Welcome back
             </h1>
             <p className="text-zinc-500 text-sm">
-              Sign in to your Edito.ai account
+              Sign in to your Stedio.ai account
             </p>
           </div>
 

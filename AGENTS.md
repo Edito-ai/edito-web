@@ -1,4 +1,4 @@
-# Agent Rules for Edito.ai Frontend
+# Agent Rules for Stedio.ai Frontend
 
 This is a Next.js (version 16) project with Tailwind CSS v4 and React 19.
 

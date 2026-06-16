@@ -13,11 +13,34 @@ const navItems = [
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [user, setUser] = useState<{ name: string } | null>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+
+    const checkUser = () => {
+      const stored = localStorage.getItem("stedio_user");
+      if (stored) {
+        try {
+          setUser(JSON.parse(stored));
+        } catch {
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    };
+
+    checkUser();
+    window.addEventListener("auth-change", checkUser);
+    window.addEventListener("storage", checkUser);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("auth-change", checkUser);
+      window.removeEventListener("storage", checkUser);
+    };
   }, []);
 
 
@@ -35,11 +58,11 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
             <Image
-              src="/logo_dark.png"
-              alt="edito.ai"
+              src="/logo_dark_v3.png"
+              alt="stedio.ai"
               width={120}
               height={30}
-              className="h-7 w-auto object-contain"
+              className="h-12 w-auto object-contain"
               priority
             />
           </Link>
@@ -59,18 +82,38 @@ export default function Navbar() {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
-            <Link
-              href="/login"
-              className="px-4 py-1.5 rounded-lg text-[13px] font-semibold text-zinc-300 hover:text-white hover:bg-white/6 transition-all duration-200"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/register"
-              className="px-5 py-2 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-[13px] transition-all duration-300 shadow-md shadow-purple-600/20 hover:shadow-purple-500/30 hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Get Started Free
-            </Link>
+            {user ? (
+              <>
+                <span className="text-[13px] font-medium text-zinc-400">
+                  Hello, <span className="text-white font-semibold">{user.name}</span>
+                </span>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem("stedio_token");
+                    localStorage.removeItem("stedio_user");
+                    window.dispatchEvent(new Event("auth-change"));
+                  }}
+                  className="px-4 py-1.5 rounded-lg text-[13px] font-semibold text-zinc-300 hover:text-white hover:bg-white/6 transition-all duration-200 cursor-pointer"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-4 py-1.5 rounded-lg text-[13px] font-semibold text-zinc-300 hover:text-white hover:bg-white/6 transition-all duration-200"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-5 py-2 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-[13px] transition-all duration-300 shadow-md shadow-purple-600/20 hover:shadow-purple-500/30 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Get Started Free
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -106,20 +149,41 @@ export default function Navbar() {
             ))}
             <div className="h-px bg-zinc-800/60 my-2" />
             <div className="flex flex-col gap-3 pt-1">
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full py-2.5 rounded-xl border border-zinc-800 hover:bg-zinc-800/30 text-zinc-300 font-semibold text-sm text-center transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/register"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full py-2.5 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 text-white font-semibold text-sm text-center transition-colors shadow-lg shadow-purple-600/15"
-              >
-                Get Started Free
-              </Link>
+              {user ? (
+                <>
+                  <span className="text-[15px] font-medium text-zinc-400 px-3 py-1">
+                    Hello, <span className="text-white font-semibold">{user.name}</span>
+                  </span>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("stedio_token");
+                      localStorage.removeItem("stedio_user");
+                      window.dispatchEvent(new Event("auth-change"));
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full py-2.5 rounded-xl border border-zinc-800 hover:bg-zinc-800/30 text-zinc-300 font-semibold text-sm text-center transition-colors cursor-pointer"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full py-2.5 rounded-xl border border-zinc-800 hover:bg-zinc-800/30 text-zinc-300 font-semibold text-sm text-center transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full py-2.5 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 text-white font-semibold text-sm text-center transition-colors shadow-lg shadow-purple-600/15"
+                  >
+                    Get Started Free
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

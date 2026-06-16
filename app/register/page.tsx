@@ -250,9 +250,10 @@ export default function RegisterPage() {
         setLoading(false);
         return;
       }
-      localStorage.setItem("edito_token", data.token);
-      localStorage.setItem("edito_user", JSON.stringify(data.user));
-      router.push("/dashboard");
+      localStorage.setItem("stedio_token", data.token);
+      localStorage.setItem("stedio_user", JSON.stringify(data.user));
+      window.dispatchEvent(new Event("auth-change"));
+      router.push("/");
     } catch {
       setError("Unable to connect to server");
       setLoading(false);
@@ -263,13 +264,13 @@ export default function RegisterPage() {
 
   const stepContent = [
     // Step 0 — Name
-    <div key="name" className="space-y-8">
-      <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 mx-auto">
-        <User className="w-7 h-7 text-purple-400" />
+    <div key="name" className="space-y-6">
+      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/20 mx-auto">
+        <User className="w-6 h-6 text-purple-400" />
       </div>
       <div className="text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">What&apos;s your name?</h2>
-        <p className="text-zinc-500 text-base mt-3">Let&apos;s start with the basics</p>
+        <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">What&apos;s your name?</h2>
+        <p className="text-zinc-500 text-sm mt-2">Let&apos;s start with the basics</p>
       </div>
       <input
         ref={inputRef}
@@ -278,25 +279,25 @@ export default function RegisterPage() {
         onChange={(e) => setName(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Your full name"
-        className="glass-input w-full max-w-sm mx-auto block px-6 py-4 rounded-xl text-white placeholder-zinc-600 text-lg text-center"
+        className="glass-input w-full max-w-sm mx-auto block px-6 py-3.5 rounded-xl text-white placeholder-zinc-600 text-lg text-center"
         autoFocus
       />
     </div>,
 
     // Step 1 — Email + OTP
-    <div key="email" className="space-y-8">
-      <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 mx-auto">
+    <div key="email" className="space-y-6">
+      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 mx-auto">
         {otpVerified ? (
-          <ShieldCheck className="w-7 h-7 text-emerald-400" />
+          <ShieldCheck className="w-6 h-6 text-emerald-400" />
         ) : (
-          <Mail className="w-7 h-7 text-indigo-400" />
+          <Mail className="w-6 h-6 text-indigo-400" />
         )}
       </div>
       <div className="text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+        <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
           {otpVerified ? "Email verified!" : otpSent ? "Enter the code" : "What\u0027s your email?"}
         </h2>
-        <p className="text-zinc-500 text-base mt-3">
+        <p className="text-zinc-500 text-sm mt-2">
           {otpVerified
             ? "Your email has been confirmed"
             : otpSent
@@ -306,11 +307,25 @@ export default function RegisterPage() {
       </div>
 
       {otpVerified ? (
-        <div className="flex items-center justify-center gap-3 py-4">
-          <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center animate-[scaleUp_0.3s_ease-out]">
-            <Check className="w-6 h-6 text-emerald-400" />
+        <div className="flex flex-col items-center justify-center gap-2 py-4 animate-[scaleUp_0.3s_ease-out]">
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
+              <Check className="w-6 h-6 text-emerald-400" />
+            </div>
+            <span className="text-emerald-400 font-semibold text-lg">Verified</span>
           </div>
-          <span className="text-emerald-400 font-semibold text-lg">Verified</span>
+          <button
+            type="button"
+            onClick={() => {
+              setOtpVerified(false);
+              setOtpSent(false);
+              setOtp(["", "", "", "", "", ""]);
+              setError("");
+            }}
+            className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors mt-2 underline cursor-pointer"
+          >
+            Change email
+          </button>
         </div>
       ) : !otpSent ? (
         <div className="max-w-sm mx-auto space-y-4">
@@ -327,7 +342,7 @@ export default function RegisterPage() {
             type="button"
             onClick={sendOtp}
             disabled={otpLoading || !email}
-            className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+            className={`w-full py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
               email && !otpLoading
                 ? "bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-600/20"
                 : "bg-zinc-800/50 text-zinc-600 cursor-not-allowed"
@@ -402,13 +417,13 @@ export default function RegisterPage() {
     </div>,
 
     // Step 2 — Platform
-    <div key="platform" className="space-y-8">
-      <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-pink-500/10 border border-pink-500/20 mx-auto">
-        <Video className="w-7 h-7 text-pink-400" />
+    <div key="platform" className="space-y-6">
+      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-pink-500/10 border border-pink-500/20 mx-auto">
+        <Video className="w-6 h-6 text-pink-400" />
       </div>
       <div className="text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Where do you create?</h2>
-        <p className="text-zinc-500 text-base mt-3">Pick your primary platform</p>
+        <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Where do you create?</h2>
+        <p className="text-zinc-500 text-sm mt-2">Pick your primary platform</p>
       </div>
       <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
         {PLATFORMS.map((p) => {
@@ -445,13 +460,13 @@ export default function RegisterPage() {
     </div>,
 
     // Step 3 — Followers
-    <div key="followers" className="space-y-8">
-      <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 mx-auto">
-        <Users className="w-7 h-7 text-cyan-400" />
+    <div key="followers" className="space-y-6">
+      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 mx-auto">
+        <Users className="w-6 h-6 text-cyan-400" />
       </div>
       <div className="text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">How big is your audience?</h2>
-        <p className="text-zinc-500 text-base mt-3">Followers or subscribers — roughly</p>
+        <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">How big is your audience?</h2>
+        <p className="text-zinc-500 text-sm mt-2">Followers or subscribers — roughly</p>
       </div>
       <div className="space-y-2.5 max-w-sm mx-auto">
         {FOLLOWER_RANGES.map((f) => {
@@ -487,13 +502,13 @@ export default function RegisterPage() {
     </div>,
 
     // Step 4 — Password
-    <div key="password" className="space-y-8">
-      <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mx-auto">
-        <Lock className="w-7 h-7 text-emerald-400" />
+    <div key="password" className="space-y-6">
+      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mx-auto">
+        <Lock className="w-6 h-6 text-emerald-400" />
       </div>
       <div className="text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Set your password</h2>
-        <p className="text-zinc-500 text-base mt-3">Minimum 6 characters</p>
+        <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Set your password</h2>
+        <p className="text-zinc-500 text-sm mt-2">Minimum 6 characters</p>
       </div>
       <div className="space-y-4 max-w-sm mx-auto">
         <div className="relative">
@@ -545,24 +560,24 @@ export default function RegisterPage() {
         }}
       />
 
-      {/* Content wrapper — vertically centered */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-8 min-h-0">
+      {/* Content wrapper — vertically centered, no scroll on standard viewports */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-6 min-h-0 w-full">
         {/* Logo */}
-        <div className="mb-8">
+        <div className="mb-6">
           <Link href="/" className="transition-opacity hover:opacity-80">
             <Image
-              src="/logo_dark.png"
-              alt="edito.ai"
+              src="/logo_dark_v3.png"
+              alt="stedio.ai"
               width={160}
               height={40}
-              className="h-9 w-auto object-contain"
+              className="h-16 w-auto object-contain"
               priority
             />
           </Link>
         </div>
 
         {/* Progress bar */}
-        <div className="w-full max-w-lg mb-8">
+        <div className="w-full max-w-lg mb-6">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-zinc-500">Step {step + 1} of {TOTAL_STEPS}</span>
             <span className="text-xs font-semibold text-purple-400">{Math.round(progress)}%</span>
@@ -577,7 +592,7 @@ export default function RegisterPage() {
 
         {/* Main Card */}
         <div className="w-full max-w-lg">
-          <div className="relative rounded-3xl border border-zinc-800/50 bg-zinc-950/60 backdrop-blur-xl shadow-2xl shadow-black/40 p-8 md:p-12 overflow-hidden">
+          <div className="relative rounded-3xl border border-zinc-800/50 bg-zinc-950/60 backdrop-blur-xl shadow-2xl shadow-black/40 px-6 py-8 md:px-10 md:py-8 overflow-hidden">
             {/* Top glow line */}
             <div className="absolute inset-0 rounded-3xl pointer-events-none overflow-hidden">
               <div className="absolute -top-px left-[15%] right-[15%] h-px bg-linear-to-r from-transparent via-purple-500/30 to-transparent" />
@@ -599,22 +614,22 @@ export default function RegisterPage() {
             </div>
 
             {/* Navigation */}
-            {!(step === 1 && !otpVerified) && (
-              <div className="flex items-center gap-3 mt-10 max-w-sm mx-auto">
-                {step > 0 && (
-                  <button
-                    type="button"
-                    onClick={prevStep}
-                    className="flex items-center justify-center w-12 h-12 rounded-xl border border-zinc-800/60 bg-zinc-900/40 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all duration-200"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </button>
-                )}
+            <div className={`flex items-center gap-3 mt-8 max-w-sm mx-auto w-full ${step === 1 && !otpVerified ? "justify-center" : ""}`}>
+              {step > 0 && (
+                <button
+                  type="button"
+                  onClick={prevStep}
+                  className="flex items-center justify-center w-12 h-12 rounded-xl border border-zinc-800/60 bg-zinc-900/40 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all duration-200 shrink-0"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+              )}
+              {!(step === 1 && !otpVerified) && (
                 <button
                   type="button"
                   onClick={nextStep}
                   disabled={!canProceed() || loading}
-                  className={`flex-1 py-3.5 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+                  className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
                     canProceed() && !loading
                       ? "bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-600/20 hover:shadow-purple-500/30 hover:scale-[1.01] active:scale-[0.99]"
                       : "bg-zinc-800/50 text-zinc-600 cursor-not-allowed"
@@ -634,11 +649,11 @@ export default function RegisterPage() {
                     </>
                   )}
                 </button>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Sign in link */}
-            <div className="mt-8 pt-6 border-t border-zinc-800/40 text-center">
+            <div className="mt-6 pt-4 border-t border-zinc-800/40 text-center">
               <p className="text-zinc-500 text-sm">
                 Already have an account?{" "}
                 <Link href="/login" className="text-purple-400 hover:text-purple-300 font-semibold transition-colors">
@@ -650,7 +665,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-zinc-700 text-xs mt-6">
+        <p className="text-center text-zinc-700 text-xs mt-4">
           By creating an account, you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>

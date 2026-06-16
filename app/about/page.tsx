@@ -22,7 +22,7 @@ export default function AboutPage() {
             </span>
           </h1>
           <p className="text-zinc-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-medium">
-            We are a tiny team of creators and developers who got tired of spending hours on repetitive editing tasks—like writing captions, trimming pauses, and formatting transcripts. We built Edito.ai to put the tedious work on autopilot.
+            We are a tiny team of creators and developers who got tired of spending hours on repetitive editing tasks—like writing captions, trimming pauses, and formatting transcripts. We built Stedio.ai to put the tedious work on autopilot.
           </p>
         </section>
 
@@ -37,7 +37,7 @@ export default function AboutPage() {
               </h2>
               <div className="space-y-4 text-zinc-400 leading-relaxed font-medium text-[14px]">
                 <p>
-                  Edito.ai started as a side project between three friends. We were editing YouTube videos and TikToks on weekends, and noticed how much time we wasted doing the same tedious tasks over and over—transcribing audio, typing captions, and adjusting aspect ratios.
+                  Stedio.ai started as a side project between three friends. We were editing YouTube videos and TikToks on weekends, and noticed how much time we wasted doing the same tedious tasks over and over—transcribing audio, typing captions, and adjusting aspect ratios.
                 </p>
                 <p>
                   {"We built a few custom scripts to automate those steps for ourselves. When we showed them to other creator friends, they wanted to use them too. That's when we realized this could help a lot more people. We are just starting our journey, and we're committed to making content creation simple and fun."}
@@ -83,13 +83,13 @@ export default function AboutPage() {
         {/* Feedback CTA */}
         <section className="py-16 px-6 max-w-4xl mx-auto text-center relative z-10 mb-20 rounded-2xl border border-zinc-800/40 bg-zinc-950/40 backdrop-blur-md shadow-xl">
           <h2 className="text-2xl font-bold text-white mb-3">
-            Help us build Edito.ai
+            Help us build Stedio.ai
           </h2>
           <p className="text-zinc-400 max-w-lg mx-auto mb-6 text-sm font-medium leading-relaxed">
             We are currently in active beta and would love to hear your thoughts. If you have feature requests, bugs to report, or just want to say hi, feel free to reach out.
           </p>
           <a
-            href="mailto:team@edito.ai"
+            href="mailto:team@stedio.ai"
             className="inline-block px-5 py-2 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs transition-all duration-300 shadow-md shadow-purple-600/20 hover:shadow-purple-500/30 hover:scale-[1.02] active:scale-[0.98]"
           >
             Send Us an Email

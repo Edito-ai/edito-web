@@ -12,7 +12,7 @@ export default function Testimonials() {
           Used by Top-Tier Creators
         </h2>
         <p className="text-zinc-400 text-base">
-          See how editors and content production spaces are scaling their delivery metrics with edito.ai.
+          See how editors and content production spaces are scaling their delivery metrics with stedio.ai.
         </p>
       </div>
 
@@ -24,7 +24,7 @@ export default function Testimonials() {
               {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
             </div>
             <p className="text-zinc-300 text-sm leading-relaxed mb-6 italic">
-              &quot;Before edito.ai, our podcast pipeline required three tools: desilencing scripts, standard caption apps, and a video compiler. Now we run everything in edito in 15 minutes instead of 2 hours. Game changer.&quot;
+              &quot;Before stedio.ai, our podcast pipeline required three tools: desilencing scripts, standard caption apps, and a video compiler. Now we run everything in stedio in 15 minutes instead of 2 hours. Game changer.&quot;
             </p>
           </div>
           <div className="flex items-center gap-3 border-t border-zinc-800/50 pt-4">
@@ -66,7 +66,7 @@ export default function Testimonials() {
               {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
             </div>
             <p className="text-zinc-300 text-sm leading-relaxed mb-6 italic">
-              &quot;We operate a newsletter combined with daily short clips. edito&apos;s ability to ingest our draft, build caption variations, and format video ratios automatically cut our agency&apos;s editing budget by 40% this quarter.&quot;
+              &quot;We operate a newsletter combined with daily short clips. stedio&apos;s ability to ingest our draft, build caption variations, and format video ratios automatically cut our agency&apos;s editing budget by 40% this quarter.&quot;
             </p>
           </div>
           <div className="flex items-center gap-3 border-t border-zinc-800/50 pt-4">

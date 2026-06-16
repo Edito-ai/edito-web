@@ -1,4 +1,4 @@
-# Edito.ai Frontend — Development Guide
+# Stedio.ai Frontend — Development Guide
 
 ## Build & Run Commands
 - **Install Dependencies**: `npm install`

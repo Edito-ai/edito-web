@@ -13,12 +13,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Edito.ai - All-in-One AI Workspace for Modern Editors",
+  title: "Stedio.ai - All-in-One AI Workspace for Modern Editors",
   description: "The complete AI-powered workspace for writers, caption creators, and video editors. Create blog scripts, viral captions, and edit videos in seconds.",
   keywords: "video editing AI, AI content writer, caption generator, viral captions, automatic subtitles, AI editor",
-  authors: [{ name: "Edito.ai Team" }],
+  authors: [{ name: "Stedio.ai Team" }],
   openGraph: {
-    title: "Edito.ai - All-in-One AI Workspace for Modern Editors",
+    title: "Stedio.ai - All-in-One AI Workspace for Modern Editors",
     description: "The complete AI-powered workspace for writers, caption creators, and video editors.",
     type: "website",
   },

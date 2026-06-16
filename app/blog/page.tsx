@@ -76,7 +76,7 @@ export default function BlogPage() {
         {/* Hero Section */}
         <section className="pt-32 pb-16 px-6 max-w-5xl mx-auto text-center relative z-10">
           <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-4">
-            The Edito.ai{" "}
+            The Stedio.ai{" "}
             <span className="bg-linear-to-r from-purple-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">
               Blog
             </span>

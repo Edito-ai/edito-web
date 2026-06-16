@@ -56,7 +56,7 @@ export default function Hero() {
                 <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
                 <div className="w-3 h-3 rounded-full bg-green-500/80" />
               </div>
-              <span className="text-xs font-semibold text-zinc-500">edito-workspace_v2.mp4</span>
+              <span className="text-xs font-semibold text-zinc-500">stedio-workspace_v2.mp4</span>
               <div className="w-8" />
             </div>
 
@@ -185,7 +185,7 @@ export default function Hero() {
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between px-3 py-1.5 border-b border-zinc-900/60">
-              <span className="text-xs font-semibold text-zinc-400">Edito.ai Product Walkthrough</span>
+              <span className="text-xs font-semibold text-zinc-400">Stedio.ai Product Walkthrough</span>
               <button 
                 onClick={() => setShowDemoModal(false)}
                 className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/6 transition-colors"

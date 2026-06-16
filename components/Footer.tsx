@@ -10,15 +10,15 @@ export default function Footer() {
         <div className="md:col-span-4 flex flex-col gap-4">
           <div className="flex items-center">
             <Image 
-              src="/logo_dark.png" 
-              alt="edito.ai" 
+              src="/logo_dark_v3.png" 
+              alt="stedio.ai" 
               width={100} 
               height={25} 
-              className="h-6 w-auto object-contain"
+              className="h-12 w-auto object-contain"
             />
           </div>
           <p className="text-xs text-zinc-500 leading-relaxed max-w-sm">
-            edito.ai provides deep neural generation solutions for content writing, subtitle tracking, and timelines, designed to minimize creator editing workflows.
+            stedio.ai provides deep neural generation solutions for content writing, subtitle tracking, and timelines, designed to minimize creator editing workflows.
           </p>
           <div className="flex items-center gap-4 text-zinc-500 mt-2">
             <a href="#" className="hover:text-white transition-colors" aria-label="LinkedIn">
@@ -74,7 +74,7 @@ export default function Footer() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 mt-16 pt-8 border-t border-zinc-900/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-zinc-600">
-        <span>&copy; {new Date().getFullYear()} Edito.ai. All rights reserved.</span>
+        <span>&copy; {new Date().getFullYear()} Stedio.ai. All rights reserved.</span>
         <span>Designed for modern editors around the globe.</span>
       </div>
     </footer>

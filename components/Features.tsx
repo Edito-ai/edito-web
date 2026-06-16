@@ -12,7 +12,7 @@ export default function Features() {
           A Multi-Tool Workspace Powered by AI
         </h2>
         <p className="text-zinc-400 text-base md:text-lg">
-          Say goodbye to jumping between writing portals, editing timelines, and social hubs. edito.ai covers the full production lifecycle.
+          Say goodbye to jumping between writing portals, editing timelines, and social hubs. stedio.ai covers the full production lifecycle.
         </p>
       </div>
 
