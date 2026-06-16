@@ -1,7 +1,6 @@
 import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import Image from "next/image";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 
 interface BlogPost {
@@ -65,44 +64,44 @@ export default function BlogPage() {
   const recentPosts = mockPosts.slice(1);
 
   return (
-    <div className="flex-1 w-full bg-background text-zinc-100 font-sans selection:bg-purple-500/30 selection:text-purple-200 relative overflow-x-clip min-h-screen flex flex-col justify-between">
+    <div className="flex-1 w-full bg-background text-text-primary font-body relative overflow-x-clip min-h-screen flex flex-col justify-between">
       {/* Background Neon Gradients */}
-      <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-indigo-900/10 rounded-full blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] bg-purple-900/10 rounded-full blur-[130px] pointer-events-none" />
+      <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] bg-accent-red/5 rounded-full blur-[120px] pointer-events-none" />
 
       <div>
         <Navbar />
 
         {/* Hero Section */}
         <section className="pt-32 pb-16 px-6 max-w-5xl mx-auto text-center relative z-10">
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-4">
+          <h1 className="text-4xl md:text-5xl font-extrabold font-display tracking-tight text-text-primary mb-4">
             The Stedio.ai{" "}
-            <span className="bg-linear-to-r from-purple-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">
+            <span className="text-accent">
               Blog
             </span>
           </h1>
-          <p className="text-zinc-400 text-base md:text-lg max-w-2xl mx-auto font-medium">
+          <p className="text-text-muted text-base md:text-lg max-w-2xl mx-auto font-medium">
             Learn strategies, hacks, and technical workflows from top creators and engineers to refine your editing and scale your digital audience.
           </p>
         </section>
 
         {/* Featured Post */}
         <section className="px-6 max-w-5xl mx-auto relative z-10 mb-16">
-          <div className="group relative rounded-3xl border border-zinc-800/60 bg-zinc-900/40 p-6 md:p-8 glass-panel shadow-2xl overflow-hidden grid md:grid-cols-12 gap-8 items-center">
+          <div className="group relative rounded-2xl border border-border bg-surface p-6 md:p-8 shadow-2xl overflow-hidden grid md:grid-cols-12 gap-8 items-center">
             {/* Image */}
-            <div className="md:col-span-6 overflow-hidden rounded-2xl border border-zinc-800/80 aspect-16/10 w-full relative">
+            <div className="md:col-span-6 overflow-hidden rounded-xl border border-border aspect-16/10 w-full relative">
               <img
                 src={featuredPost.image}
                 alt={featuredPost.title}
-                className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out"
+                className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out"
               />
-              <div className="absolute top-4 left-4 px-2.5 py-1 rounded-md bg-purple-600/90 text-[11px] font-bold text-white uppercase tracking-wider backdrop-blur-xs">
+              <div className="absolute top-4 left-4 px-2.5 py-1 rounded bg-accent text-[10px] font-mono font-bold text-background uppercase tracking-wider">
                 {featuredPost.category}
               </div>
             </div>
             {/* Content */}
             <div className="md:col-span-6 flex flex-col justify-center">
-              <div className="flex items-center gap-4 text-zinc-500 text-xs font-semibold mb-3">
+              <div className="flex items-center gap-4 text-text-muted text-xs font-mono font-semibold mb-3">
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5" />
                   {featuredPost.date}
@@ -112,10 +111,10 @@ export default function BlogPage() {
                   {featuredPost.readTime}
                 </span>
               </div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white group-hover:text-purple-400 transition-colors duration-300 tracking-tight leading-tight mb-4">
+              <h2 className="text-2xl md:text-3xl font-bold font-display text-text-primary group-hover:text-accent transition-colors duration-300 tracking-tight leading-tight mb-4">
                 {featuredPost.title}
               </h2>
-              <p className="text-zinc-400 leading-relaxed font-medium text-[14px] md:text-[15px] mb-6">
+              <p className="text-text-muted leading-relaxed text-[14px] md:text-[15px] mb-6">
                 {featuredPost.excerpt}
               </p>
               <div className="flex items-center justify-between mt-auto">
@@ -123,13 +122,13 @@ export default function BlogPage() {
                   <img
                     src={featuredPost.author.avatar}
                     alt={featuredPost.author.name}
-                    className="w-9 h-9 rounded-full border border-zinc-700/50 object-cover"
+                    className="w-9 h-9 rounded-full border border-border object-cover"
                   />
-                  <span className="text-sm font-semibold text-zinc-300">
+                  <span className="text-sm font-semibold text-text-primary">
                     {featuredPost.author.name}
                   </span>
                 </div>
-                <span className="inline-flex items-center gap-1 text-[13px] font-bold text-purple-400 group-hover:text-purple-300 transition-colors">
+                <span className="inline-flex items-center gap-1 text-[13px] font-bold text-accent group-hover:underline transition-colors cursor-pointer">
                   Read Article
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                 </span>
@@ -140,29 +139,29 @@ export default function BlogPage() {
 
         {/* Recent Posts Grid */}
         <section className="px-6 max-w-5xl mx-auto relative z-10 mb-20">
-          <h3 className="text-xl font-bold text-white mb-8 border-b border-zinc-800/40 pb-3">
+          <h3 className="text-xl font-bold font-display text-text-primary mb-8 border-b border-border pb-3">
             Recent Articles
           </h3>
           <div className="grid md:grid-cols-2 gap-8">
             {recentPosts.map((post) => (
               <div
                 key={post.id}
-                className="group relative flex flex-col rounded-2xl border border-zinc-800/60 bg-zinc-900/20 p-5 glass-panel shadow-lg hover:shadow-xl hover:border-zinc-700/60 transition-all duration-300"
+                className="group relative flex flex-col rounded-xl border border-border bg-surface p-5 shadow-lg hover:shadow-xl hover:border-text-muted/40 transition-all duration-300"
               >
                 {/* Image */}
-                <div className="overflow-hidden rounded-xl border border-zinc-800/60 aspect-16/10 w-full relative mb-4">
+                <div className="overflow-hidden rounded-lg border border-border aspect-16/10 w-full relative mb-4">
                   <img
                     src={post.image}
                     alt={post.title}
-                    className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out"
+                    className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out"
                   />
-                  <div className="absolute top-3 left-3 px-2 py-0.5 rounded-md bg-zinc-950/80 text-[10px] font-bold text-zinc-300 uppercase tracking-wider backdrop-blur-xs border border-zinc-800">
+                  <div className="absolute top-3 left-3 px-2 py-0.5 rounded bg-background text-[9px] font-mono font-bold text-text-muted uppercase tracking-wider border border-border">
                     {post.category}
                   </div>
                 </div>
 
                 {/* Meta */}
-                <div className="flex items-center gap-4 text-zinc-500 text-[11px] font-semibold mb-2">
+                <div className="flex items-center gap-4 text-text-muted text-[11px] font-mono font-semibold mb-2">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
                     {post.date}
@@ -174,26 +173,26 @@ export default function BlogPage() {
                 </div>
 
                 {/* Content */}
-                <h4 className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors duration-300 leading-snug mb-3">
+                <h4 className="text-lg font-bold font-display text-text-primary group-hover:text-accent transition-colors duration-300 leading-snug mb-3">
                   {post.title}
                 </h4>
-                <p className="text-zinc-400 text-xs md:text-sm font-medium leading-relaxed mb-6">
+                <p className="text-text-muted text-xs md:text-sm leading-relaxed mb-6">
                   {post.excerpt}
                 </p>
 
                 {/* Author & CTA */}
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-zinc-800/30">
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-border">
                   <div className="flex items-center gap-2">
                     <img
                       src={post.author.avatar}
                       alt={post.author.name}
-                      className="w-7 h-7 rounded-full border border-zinc-700/50 object-cover"
+                      className="w-7 h-7 rounded-full border border-border object-cover"
                     />
-                    <span className="text-xs font-semibold text-zinc-400">
+                    <span className="text-xs font-semibold text-text-muted">
                       {post.author.name}
                     </span>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-purple-400 group-hover:text-purple-300 transition-colors">
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-accent group-hover:underline transition-colors cursor-pointer">
                     Read
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform duration-300" />
                   </span>

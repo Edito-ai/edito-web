@@ -45,7 +45,7 @@ const PLATFORMS = [
       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
     </svg>
   ), color: "from-blue-500 to-blue-600" },
-  { id: "other", label: "Other", icon: Users, color: "from-violet-500 to-purple-600" },
+  { id: "other", label: "Other", icon: Users, color: "from-zinc-600 to-zinc-700" },
 ];
 
 const FOLLOWER_RANGES = [
@@ -265,12 +265,12 @@ export default function RegisterPage() {
   const stepContent = [
     // Step 0 — Name
     <div key="name" className="space-y-6">
-      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/20 mx-auto">
-        <User className="w-6 h-6 text-purple-400" />
+      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 mx-auto text-accent">
+        <User className="w-6 h-6" />
       </div>
       <div className="text-center">
-        <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">What&apos;s your name?</h2>
-        <p className="text-zinc-500 text-sm mt-2">Let&apos;s start with the basics</p>
+        <h2 className="text-2xl md:text-3xl font-bold font-display text-text-primary tracking-tight">What&apos;s your name?</h2>
+        <p className="text-text-muted text-sm mt-2">Let&apos;s start with the basics</p>
       </div>
       <input
         ref={inputRef}
@@ -279,29 +279,29 @@ export default function RegisterPage() {
         onChange={(e) => setName(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Your full name"
-        className="glass-input w-full max-w-sm mx-auto block px-6 py-3.5 rounded-xl text-white placeholder-zinc-600 text-lg text-center"
+        className="w-full max-w-sm mx-auto block px-6 py-3.5 rounded-lg bg-background border border-border text-text-primary placeholder:text-text-muted/40 text-lg text-center focus:border-accent focus:ring-1 focus:ring-accent outline-hidden transition-all duration-200"
         autoFocus
       />
     </div>,
 
     // Step 1 — Email + OTP
     <div key="email" className="space-y-6">
-      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 mx-auto">
+      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 mx-auto text-accent">
         {otpVerified ? (
           <ShieldCheck className="w-6 h-6 text-emerald-400" />
         ) : (
-          <Mail className="w-6 h-6 text-indigo-400" />
+          <Mail className="w-6 h-6" />
         )}
       </div>
       <div className="text-center">
-        <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+        <h2 className="text-2xl md:text-3xl font-bold font-display text-text-primary tracking-tight">
           {otpVerified ? "Email verified!" : otpSent ? "Enter the code" : "What\u0027s your email?"}
         </h2>
-        <p className="text-zinc-500 text-sm mt-2">
+        <p className="text-text-muted text-sm mt-2">
           {otpVerified
             ? "Your email has been confirmed"
             : otpSent
-            ? <>We sent a 6-digit code to <span className="text-zinc-300 font-medium">{email}</span></>
+            ? <>We sent a 6-digit code to <span className="text-text-primary font-medium">{email}</span></>
             : "We\u0027ll send you a verification code"}
         </p>
       </div>
@@ -322,7 +322,7 @@ export default function RegisterPage() {
               setOtp(["", "", "", "", "", ""]);
               setError("");
             }}
-            className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors mt-2 underline cursor-pointer"
+            className="text-text-muted hover:text-text-primary text-xs transition-colors mt-2 underline cursor-pointer"
           >
             Change email
           </button>
@@ -336,16 +336,16 @@ export default function RegisterPage() {
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="you@example.com"
-            className="glass-input w-full px-6 py-4 rounded-xl text-white placeholder-zinc-600 text-lg text-center"
+            className="w-full px-6 py-4 rounded-lg bg-background border border-border text-text-primary placeholder:text-text-muted/40 text-lg text-center focus:border-accent focus:ring-1 focus:ring-accent outline-hidden transition-all duration-200"
           />
           <button
             type="button"
             onClick={sendOtp}
             disabled={otpLoading || !email}
-            className={`w-full py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+            className={`w-full py-3 rounded-lg font-bold font-display text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
               email && !otpLoading
-                ? "bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-600/20"
-                : "bg-zinc-800/50 text-zinc-600 cursor-not-allowed"
+                ? "bg-accent text-background hover:bg-accent/90"
+                : "bg-zinc-800/50 text-text-muted/50 cursor-not-allowed"
             }`}
           >
             {otpLoading ? (
@@ -373,17 +373,17 @@ export default function RegisterPage() {
                 onChange={(e) => handleOtpChange(i, e.target.value)}
                 onKeyDown={(e) => handleOtpKeyDown(i, e)}
                 disabled={otpLoading}
-                className={`w-12 h-14 md:w-14 md:h-16 rounded-xl text-center text-xl md:text-2xl font-bold transition-all duration-200 outline-none ${
+                className={`w-12 h-14 md:w-14 md:h-16 rounded-lg text-center text-xl md:text-2xl font-bold transition-all duration-200 outline-none ${
                   digit
-                    ? "glass-input border-purple-500/50 text-white bg-purple-500/5"
-                    : "glass-input text-white"
-                } ${otpLoading ? "opacity-50" : ""}`}
+                    ? "bg-accent/5 border-accent text-accent"
+                    : "bg-background border-border text-text-primary focus:border-accent focus:ring-1 focus:ring-accent"
+                } border ${otpLoading ? "opacity-50" : ""}`}
               />
             ))}
           </div>
 
           {otpLoading && (
-            <div className="flex items-center justify-center gap-2 text-purple-400 text-sm">
+            <div className="flex items-center justify-center gap-2 text-accent text-sm">
               <Loader2 className="w-4 h-4 animate-spin" />
               Verifying...
             </div>
@@ -392,12 +392,12 @@ export default function RegisterPage() {
           {/* Resend */}
           <div className="text-center">
             {resendTimer > 0 ? (
-              <p className="text-zinc-600 text-sm">Resend code in <span className="text-zinc-400 font-medium">{resendTimer}s</span></p>
+              <p className="text-text-muted text-sm">Resend code in <span className="text-text-primary font-medium">{resendTimer}s</span></p>
             ) : (
               <button
                 type="button"
                 onClick={() => { setOtp(["", "", "", "", "", ""]); sendOtp(); }}
-                className="text-purple-400 hover:text-purple-300 text-sm font-semibold transition-colors"
+                className="text-accent hover:underline text-sm font-semibold transition-colors cursor-pointer"
               >
                 Resend code
               </button>
@@ -408,7 +408,7 @@ export default function RegisterPage() {
           <button
             type="button"
             onClick={() => { setOtpSent(false); setOtp(["", "", "", "", "", ""]); setError(""); }}
-            className="block mx-auto text-zinc-600 hover:text-zinc-400 text-xs transition-colors"
+            className="block mx-auto text-text-muted hover:text-text-primary text-xs transition-colors cursor-pointer"
           >
             Change email address
           </button>
@@ -418,12 +418,12 @@ export default function RegisterPage() {
 
     // Step 2 — Platform
     <div key="platform" className="space-y-6">
-      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-pink-500/10 border border-pink-500/20 mx-auto">
-        <Video className="w-6 h-6 text-pink-400" />
+      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 mx-auto text-accent">
+        <Video className="w-6 h-6" />
       </div>
       <div className="text-center">
-        <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Where do you create?</h2>
-        <p className="text-zinc-500 text-sm mt-2">Pick your primary platform</p>
+        <h2 className="text-2xl md:text-3xl font-bold font-display text-text-primary tracking-tight">Where do you create?</h2>
+        <p className="text-text-muted text-sm mt-2">Pick your primary platform</p>
       </div>
       <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
         {PLATFORMS.map((p) => {
@@ -434,23 +434,23 @@ export default function RegisterPage() {
               key={p.id}
               type="button"
               onClick={() => setPlatform(p.id)}
-              className={`relative flex items-center gap-3 px-4 py-3.5 rounded-xl border transition-all duration-200 text-left group ${
+              className={`relative flex items-center gap-3 px-4 py-3.5 rounded-lg border transition-all duration-200 text-left group cursor-pointer ${
                 selected
-                  ? "border-purple-500/50 bg-purple-500/10 shadow-lg shadow-purple-500/5"
-                  : "border-zinc-800/60 bg-zinc-900/30 hover:border-zinc-700/60 hover:bg-zinc-800/20"
+                  ? "border-accent bg-accent/10"
+                  : "border-border bg-surface hover:border-text-muted/40"
               }`}
             >
-              <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${
-                selected ? `bg-linear-to-br ${p.color} text-white` : "bg-zinc-800/80 text-zinc-400"
+              <div className={`flex items-center justify-center w-9 h-9 rounded-md ${
+                selected ? `bg-linear-to-br ${p.color} text-white` : "bg-background text-text-muted"
               } transition-all duration-200`}>
                 <Icon className="w-5 h-5" />
               </div>
-              <span className={`text-sm font-semibold ${selected ? "text-white" : "text-zinc-400"} transition-colors`}>
+              <span className={`text-sm font-semibold ${selected ? "text-text-primary" : "text-text-muted"} transition-colors`}>
                 {p.label}
               </span>
               {selected && (
-                <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
-                  <Check className="w-3 h-3 text-white" />
+                <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-accent flex items-center justify-center">
+                  <Check className="w-3 h-3 text-background" />
                 </div>
               )}
             </button>
@@ -461,12 +461,12 @@ export default function RegisterPage() {
 
     // Step 3 — Followers
     <div key="followers" className="space-y-6">
-      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 mx-auto">
-        <Users className="w-6 h-6 text-cyan-400" />
+      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 mx-auto text-accent">
+        <Users className="w-6 h-6" />
       </div>
       <div className="text-center">
-        <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">How big is your audience?</h2>
-        <p className="text-zinc-500 text-sm mt-2">Followers or subscribers — roughly</p>
+        <h2 className="text-2xl md:text-3xl font-bold font-display text-text-primary tracking-tight">How big is your audience?</h2>
+        <p className="text-text-muted text-sm mt-2">Followers or subscribers — roughly</p>
       </div>
       <div className="space-y-2.5 max-w-sm mx-auto">
         {FOLLOWER_RANGES.map((f) => {
@@ -476,24 +476,24 @@ export default function RegisterPage() {
               key={f.id}
               type="button"
               onClick={() => setFollowers(f.id)}
-              className={`w-full flex items-center justify-between px-5 py-4 rounded-xl border transition-all duration-200 ${
+              className={`w-full flex items-center justify-between px-5 py-4 rounded-lg border transition-all duration-200 cursor-pointer ${
                 selected
-                  ? "border-purple-500/50 bg-purple-500/10"
-                  : "border-zinc-800/60 bg-zinc-900/30 hover:border-zinc-700/60 hover:bg-zinc-800/20"
+                  ? "border-accent bg-accent/10"
+                  : "border-border bg-surface hover:border-text-muted/40"
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className={`text-base font-bold ${selected ? "text-white" : "text-zinc-300"} transition-colors`}>
+                <span className={`text-base font-bold ${selected ? "text-accent" : "text-text-primary"} transition-colors`}>
                   {f.label}
                 </span>
-                <span className={`text-xs ${selected ? "text-purple-400" : "text-zinc-600"} transition-colors`}>
+                <span className={`text-xs ${selected ? "text-accent/80" : "text-text-muted"} transition-colors`}>
                   {f.desc}
                 </span>
               </div>
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
-                selected ? "border-purple-500 bg-purple-500" : "border-zinc-700"
+              <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-200 ${
+                selected ? "border-accent bg-accent" : "border-border"
               }`}>
-                {selected && <Check className="w-3 h-3 text-white" />}
+                {selected && <Check className="w-3 h-3 text-background" />}
               </div>
             </button>
           );
@@ -503,12 +503,12 @@ export default function RegisterPage() {
 
     // Step 4 — Password
     <div key="password" className="space-y-6">
-      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mx-auto">
-        <Lock className="w-6 h-6 text-emerald-400" />
+      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 mx-auto text-accent">
+        <Lock className="w-6 h-6" />
       </div>
       <div className="text-center">
-        <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Set your password</h2>
-        <p className="text-zinc-500 text-sm mt-2">Minimum 6 characters</p>
+        <h2 className="text-2xl md:text-3xl font-bold font-display text-text-primary tracking-tight">Set your password</h2>
+        <p className="text-text-muted text-sm mt-2">Minimum 6 characters</p>
       </div>
       <div className="space-y-4 max-w-sm mx-auto">
         <div className="relative">
@@ -519,12 +519,12 @@ export default function RegisterPage() {
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Password"
-            className="glass-input w-full px-6 py-4 pr-12 rounded-xl text-white placeholder-zinc-600 text-base"
+            className="w-full px-6 py-4 rounded-lg bg-background border border-border text-text-primary placeholder:text-text-muted/40 text-base focus:border-accent focus:ring-1 focus:ring-accent outline-hidden transition-all duration-200"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -535,21 +535,21 @@ export default function RegisterPage() {
           onChange={(e) => setConfirmPassword(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Confirm password"
-          className="glass-input w-full px-6 py-4 rounded-xl text-white placeholder-zinc-600 text-base"
+          className="w-full px-6 py-4 rounded-lg bg-background border border-border text-text-primary placeholder:text-text-muted/40 text-base focus:border-accent focus:ring-1 focus:ring-accent outline-hidden transition-all duration-200"
         />
         {password && confirmPassword && password !== confirmPassword && (
-          <p className="text-red-400 text-xs text-center animate-[fadeIn_0.2s_ease-out]">Passwords don&apos;t match</p>
+          <p className="text-accent-red text-xs text-center animate-[fadeIn_0.2s_ease-out]">Passwords don&apos;t match</p>
         )}
       </div>
     </div>,
   ];
 
   return (
-    <div className="fixed inset-0 w-full h-full flex flex-col bg-background overflow-y-auto">
+    <div className="fixed inset-0 w-full h-full flex flex-col bg-background overflow-y-auto font-body">
       {/* Ambient glow orbs */}
-      <div className="fixed top-[-15%] right-[-10%] w-[600px] h-[600px] bg-indigo-900/12 rounded-full blur-[150px] pointer-events-none" />
-      <div className="fixed bottom-[-15%] left-[-10%] w-[550px] h-[550px] bg-purple-900/12 rounded-full blur-[150px] pointer-events-none" />
-      <div className="fixed top-[40%] left-[50%] -translate-x-1/2 w-[300px] h-[300px] bg-violet-900/8 rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed top-[-10%] right-[-10%] w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-accent-red/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed top-[40%] left-[50%] -translate-x-1/2 w-[300px] h-[300px] bg-white/2 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Subtle grid */}
       <div
@@ -563,14 +563,14 @@ export default function RegisterPage() {
       {/* Content wrapper — vertically centered, no scroll on standard viewports */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-6 min-h-0 w-full">
         {/* Logo */}
-        <div className="mb-6">
+        <div className="mb-6 flex justify-center">
           <Link href="/" className="transition-opacity hover:opacity-80">
             <Image
               src="/logo_dark_v3.png"
-              alt="stedio.ai"
-              width={160}
+              alt="Stedio.ai"
+              width={40}
               height={40}
-              className="h-16 w-auto object-contain"
+              className="h-10 w-10 object-contain"
               priority
             />
           </Link>
@@ -579,12 +579,12 @@ export default function RegisterPage() {
         {/* Progress bar */}
         <div className="w-full max-w-lg mb-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-zinc-500">Step {step + 1} of {TOTAL_STEPS}</span>
-            <span className="text-xs font-semibold text-purple-400">{Math.round(progress)}%</span>
+            <span className="text-[10px] font-mono tracking-widest text-text-muted uppercase">Step {step + 1} of {TOTAL_STEPS}</span>
+            <span className="text-xs font-bold text-accent">{Math.round(progress)}%</span>
           </div>
-          <div className="h-1.5 w-full bg-zinc-800/80 rounded-full overflow-hidden">
+          <div className="h-1 w-full bg-border rounded-full overflow-hidden">
             <div
-              className="h-full bg-linear-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500 ease-out"
+              className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -592,15 +592,15 @@ export default function RegisterPage() {
 
         {/* Main Card */}
         <div className="w-full max-w-lg">
-          <div className="relative rounded-3xl border border-zinc-800/50 bg-zinc-950/60 backdrop-blur-xl shadow-2xl shadow-black/40 px-6 py-8 md:px-10 md:py-8 overflow-hidden">
+          <div className="relative rounded-2xl border border-border bg-surface shadow-2xl shadow-black/80 px-6 py-8 md:px-10 md:py-8 overflow-hidden">
             {/* Top glow line */}
-            <div className="absolute inset-0 rounded-3xl pointer-events-none overflow-hidden">
-              <div className="absolute -top-px left-[15%] right-[15%] h-px bg-linear-to-r from-transparent via-purple-500/30 to-transparent" />
+            <div className="absolute inset-0 rounded-2xl pointer-events-none overflow-hidden">
+              <div className="absolute -top-px left-[15%] right-[15%] h-px bg-linear-to-r from-transparent via-accent/20 to-transparent" />
             </div>
 
             {/* Error */}
             {error && (
-              <div className="mb-6 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center animate-[fadeIn_0.2s_ease-out]">
+              <div className="mb-6 px-4 py-3 rounded-lg bg-accent-red/10 border border-accent-red/20 text-accent-red text-sm text-center animate-[fadeIn_0.2s_ease-out]">
                 {error}
               </div>
             )}
@@ -619,7 +619,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={prevStep}
-                  className="flex items-center justify-center w-12 h-12 rounded-xl border border-zinc-800/60 bg-zinc-900/40 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all duration-200 shrink-0"
+                  className="flex items-center justify-center w-12 h-12 rounded-lg border border-border bg-background text-text-muted hover:text-text-primary hover:border-text-muted/40 transition-all duration-200 shrink-0 cursor-pointer"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
@@ -629,10 +629,10 @@ export default function RegisterPage() {
                   type="button"
                   onClick={nextStep}
                   disabled={!canProceed() || loading}
-                  className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+                  className={`flex-1 py-3 rounded-lg font-bold font-display text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
                     canProceed() && !loading
-                      ? "bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-600/20 hover:shadow-purple-500/30 hover:scale-[1.01] active:scale-[0.99]"
-                      : "bg-zinc-800/50 text-zinc-600 cursor-not-allowed"
+                      ? "bg-accent text-background hover:bg-accent/90"
+                      : "bg-zinc-800/50 text-text-muted/50 cursor-not-allowed"
                   }`}
                 >
                   {loading ? (
@@ -653,10 +653,10 @@ export default function RegisterPage() {
             </div>
 
             {/* Sign in link */}
-            <div className="mt-6 pt-4 border-t border-zinc-800/40 text-center">
-              <p className="text-zinc-500 text-sm">
+            <div className="mt-6 pt-4 border-t border-border text-center">
+              <p className="text-text-muted text-sm">
                 Already have an account?{" "}
-                <Link href="/login" className="text-purple-400 hover:text-purple-300 font-semibold transition-colors">
+                <Link href="/login" className="text-accent hover:underline font-semibold transition-colors">
                   Sign in
                 </Link>
               </p>
@@ -665,7 +665,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-zinc-700 text-xs mt-4">
+        <p className="text-center text-text-muted/60 text-xs mt-4">
           By creating an account, you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>

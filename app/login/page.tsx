@@ -46,11 +46,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-background">
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-background font-body">
       {/* Ambient glow orbs */}
-      <div className="absolute top-[-20%] left-[-15%] w-[500px] h-[500px] bg-purple-900/15 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[450px] h-[450px] bg-indigo-900/15 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-violet-900/8 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[450px] h-[450px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[450px] h-[450px] bg-accent-red/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-white/2 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Subtle grid pattern */}
       <div
@@ -63,39 +63,39 @@ export default function LoginPage() {
 
       <div className="relative z-10 w-full max-w-md mx-auto px-6">
         {/* Logo */}
-        <div className="flex justify-center mb-10">
+        <div className="flex justify-center mb-8">
           <Link href="/" className="transition-opacity hover:opacity-80">
             <Image
               src="/logo_dark_v3.png"
               alt="stedio.ai"
-              width={140}
-              height={35}
-              className="h-20 w-auto object-contain"
+              width={130}
+              height={32}
+              className="h-10 w-auto object-contain"
               priority
             />
           </Link>
         </div>
 
         {/* Card */}
-        <div className="relative rounded-2xl border border-zinc-800/60 bg-zinc-950/70 backdrop-blur-xl shadow-2xl shadow-black/50 p-8 md:p-10">
+        <div className="relative rounded-2xl border border-border bg-surface shadow-2xl shadow-black/80 p-8 md:p-10">
           {/* Glow border effect */}
           <div className="absolute inset-0 rounded-2xl pointer-events-none overflow-hidden">
-            <div className="absolute -top-px left-[20%] right-[20%] h-px bg-linear-to-r from-transparent via-purple-500/40 to-transparent" />
+            <div className="absolute -top-px left-[20%] right-[20%] h-px bg-linear-to-r from-transparent via-accent/30 to-transparent" />
           </div>
 
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
+            <h1 className="text-2xl font-bold font-display text-text-primary tracking-tight mb-2">
               Welcome back
             </h1>
-            <p className="text-zinc-500 text-sm">
+            <p className="text-text-muted text-sm">
               Sign in to your Stedio.ai account
             </p>
           </div>
 
           {/* Error */}
           {error && (
-            <div className="mb-6 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center animate-[fadeIn_0.2s_ease-out]">
+            <div className="mb-6 px-4 py-3 rounded-lg bg-accent-red/10 border border-accent-red/20 text-accent-red text-sm text-center animate-[fadeIn_0.2s_ease-out]">
               {error}
             </div>
           )}
@@ -106,7 +106,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <label
                 htmlFor="login-email"
-                className="block text-sm font-medium text-zinc-400"
+                className="block text-[10px] font-mono tracking-widest text-text-muted uppercase"
               >
                 Email
               </label>
@@ -117,7 +117,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
-                className="glass-input w-full px-4 py-3 rounded-xl text-white placeholder-zinc-600 text-sm"
+                className="w-full px-4 py-3 rounded-lg bg-background border border-border text-text-primary placeholder:text-text-muted/40 text-sm focus:border-accent focus:ring-1 focus:ring-accent outline-hidden transition-all duration-200"
               />
             </div>
 
@@ -125,7 +125,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <label
                 htmlFor="login-password"
-                className="block text-sm font-medium text-zinc-400"
+                className="block text-[10px] font-mono tracking-widest text-text-muted uppercase"
               >
                 Password
               </label>
@@ -138,12 +138,12 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   required
                   minLength={6}
-                  className="glass-input w-full px-4 py-3 pr-12 rounded-xl text-white placeholder-zinc-600 text-sm"
+                  className="w-full px-4 py-3 pr-12 rounded-lg bg-background border border-border text-text-primary placeholder:text-text-muted/40 text-sm focus:border-accent focus:ring-1 focus:ring-accent outline-hidden transition-all duration-200"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-zinc-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-text-muted hover:text-text-primary transition-colors"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -159,7 +159,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:from-purple-800 disabled:to-indigo-800 disabled:cursor-not-allowed text-white font-semibold text-sm transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-500/30 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-lg bg-accent text-background hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold font-display transition-all duration-200 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -173,12 +173,12 @@ export default function LoginPage() {
           </form>
 
           {/* Divider */}
-          <div className="mt-8 pt-6 border-t border-zinc-800/60 text-center">
-            <p className="text-zinc-500 text-sm">
+          <div className="mt-8 pt-6 border-t border-border text-center">
+            <p className="text-text-muted text-sm">
               Don&apos;t have an account?{" "}
               <Link
                 href="/register"
-                className="text-purple-400 hover:text-purple-300 font-semibold transition-colors"
+                className="text-accent hover:underline font-semibold transition-colors"
               >
                 Create one free
               </Link>
@@ -187,7 +187,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-zinc-600 text-xs mt-8">
+        <p className="text-center text-text-muted/60 text-xs mt-8">
           By signing in, you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>

@@ -43,18 +43,16 @@ export default function Navbar() {
     };
   }, []);
 
-
-
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-4 pointer-events-none">
+    <div className="fixed top-0 left-0 right-0 z-50">
       <nav
-        className={`pointer-events-auto w-full max-w-5xl rounded-2xl border transition-all duration-500 ease-out ${
+        className={`w-full border-b transition-all duration-300 ease-out ${
           scrolled
-            ? "border-zinc-700/60 bg-zinc-950/80 backdrop-blur-xl shadow-2xl shadow-black/40"
-            : "border-zinc-800/40 bg-zinc-950/40 backdrop-blur-md shadow-lg shadow-black/20"
+            ? "border-border bg-background/90 backdrop-blur-xl"
+            : "border-transparent bg-background"
         }`}
       >
-        <div className="px-5 md:px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
             <Image
@@ -62,7 +60,7 @@ export default function Navbar() {
               alt="stedio.ai"
               width={120}
               height={30}
-              className="h-12 w-auto object-contain"
+              className="h-10 w-auto object-contain"
               priority
             />
           </Link>
@@ -73,7 +71,7 @@ export default function Navbar() {
               <Link
                 key={item.label}
                 href={item.href}
-                className="px-3 py-1.5 rounded-lg text-[13px] font-medium text-zinc-400 hover:text-white hover:bg-white/6 transition-all duration-200"
+                className="px-3 py-1.5 rounded-md text-[13px] font-medium text-text-muted hover:text-text-primary transition-all duration-200"
               >
                 {item.label}
               </Link>
@@ -84,8 +82,8 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
-                <span className="text-[13px] font-medium text-zinc-400">
-                  Hello, <span className="text-white font-semibold">{user.name}</span>
+                <span className="text-[13px] font-medium text-text-muted">
+                  Hello, <span className="text-text-primary font-semibold">{user.name}</span>
                 </span>
                 <button
                   onClick={() => {
@@ -93,7 +91,7 @@ export default function Navbar() {
                     localStorage.removeItem("stedio_user");
                     window.dispatchEvent(new Event("auth-change"));
                   }}
-                  className="px-4 py-1.5 rounded-lg text-[13px] font-semibold text-zinc-300 hover:text-white hover:bg-white/6 transition-all duration-200 cursor-pointer"
+                  className="px-4 py-1.5 rounded-md text-[13px] font-semibold text-text-muted hover:text-text-primary transition-all duration-200 cursor-pointer"
                 >
                   Sign Out
                 </button>
@@ -102,13 +100,13 @@ export default function Navbar() {
               <>
                 <Link
                   href="/login"
-                  className="px-4 py-1.5 rounded-lg text-[13px] font-semibold text-zinc-300 hover:text-white hover:bg-white/6 transition-all duration-200"
+                  className="px-4 py-1.5 rounded-md text-[13px] font-medium text-text-muted hover:text-text-primary transition-all duration-200"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/register"
-                  className="px-5 py-2 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-[13px] transition-all duration-300 shadow-md shadow-purple-600/20 hover:shadow-purple-500/30 hover:scale-[1.02] active:scale-[0.98]"
+                  className="px-5 py-2 rounded-md bg-accent text-black font-bold text-[13px] transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
                 >
                   Get Started Free
                 </Link>
@@ -119,7 +117,7 @@ export default function Navbar() {
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/6 transition-colors"
+            className="md:hidden p-2 rounded-md text-text-muted hover:text-text-primary transition-colors"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? (
@@ -136,23 +134,23 @@ export default function Navbar() {
             mobileMenuOpen ? "max-h-[450px] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
-          <div className="px-5 pb-5 pt-1 flex flex-col gap-1 border-t border-zinc-800/50">
+          <div className="px-6 pb-5 pt-1 flex flex-col gap-1 border-t border-border">
             {navItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="px-3 py-2.5 rounded-xl text-[15px] font-medium text-zinc-300 hover:text-white hover:bg-white/6 transition-all"
+                className="px-3 py-2.5 rounded-md text-[15px] font-medium text-text-muted hover:text-text-primary transition-all"
               >
                 {item.label}
               </Link>
             ))}
-            <div className="h-px bg-zinc-800/60 my-2" />
+            <div className="h-px bg-border my-2" />
             <div className="flex flex-col gap-3 pt-1">
               {user ? (
                 <>
-                  <span className="text-[15px] font-medium text-zinc-400 px-3 py-1">
-                    Hello, <span className="text-white font-semibold">{user.name}</span>
+                  <span className="text-[15px] font-medium text-text-muted px-3 py-1">
+                    Hello, <span className="text-text-primary font-semibold">{user.name}</span>
                   </span>
                   <button
                     onClick={() => {
@@ -161,7 +159,7 @@ export default function Navbar() {
                       window.dispatchEvent(new Event("auth-change"));
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full py-2.5 rounded-xl border border-zinc-800 hover:bg-zinc-800/30 text-zinc-300 font-semibold text-sm text-center transition-colors cursor-pointer"
+                    className="w-full py-2.5 rounded-md border border-border text-text-muted hover:text-text-primary font-semibold text-sm text-center transition-all cursor-pointer"
                   >
                     Sign Out
                   </button>
@@ -171,14 +169,14 @@ export default function Navbar() {
                   <Link
                     href="/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="w-full py-2.5 rounded-xl border border-zinc-800 hover:bg-zinc-800/30 text-zinc-300 font-semibold text-sm text-center transition-colors"
+                    className="w-full py-2.5 rounded-md border border-border text-text-muted hover:text-text-primary font-semibold text-sm text-center transition-all"
                   >
                     Sign In
                   </Link>
                   <Link
                     href="/register"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="w-full py-2.5 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 text-white font-semibold text-sm text-center transition-colors shadow-lg shadow-purple-600/15"
+                    className="w-full py-2.5 rounded-md bg-accent text-black font-bold text-sm text-center transition-all"
                   >
                     Get Started Free
                   </Link>
@@ -215,49 +213,43 @@ function BuildingPopup() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in pointer-events-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md pointer-events-auto"
       onClick={() => setIsOpen(false)}
+      style={{ animation: "fadeIn 0.2s ease-out forwards" }}
     >
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scaleUp {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
       <div
-        className="relative w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-950 p-6 md:p-8 shadow-2xl text-center flex flex-col items-center gap-5 glass-panel select-none animate-scale-up"
+        className="relative w-full max-w-sm rounded-xl border border-border bg-surface p-6 md:p-8 text-center flex flex-col items-center gap-5 select-none"
         onClick={(e) => e.stopPropagation()}
+        style={{ animation: "scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}
       >
-        {/* Style tag for animations */}
-        <style>{`
-          @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          @keyframes scaleUp {
-            from { transform: scale(0.95); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-          }
-          .animate-fade-in {
-            animation: fadeIn 0.2s ease-out forwards;
-          }
-          .animate-scale-up {
-            animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-          }
-        `}</style>
-
         {/* Close button */}
         <button
           onClick={() => setIsOpen(false)}
-          className="absolute top-4 right-4 p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-white/6 transition-colors"
+          className="absolute top-4 right-4 p-1 rounded-md text-text-muted hover:text-text-primary transition-colors"
           aria-label="Close modal"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Icon container */}
-        <div className="w-14 h-14 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+        <div className="w-14 h-14 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center text-accent">
           <Sparkles className="w-6 h-6 animate-pulse" />
         </div>
 
         {/* Text */}
         <div className="space-y-2">
-          <h3 className="text-xl font-bold text-white tracking-tight">Hold on, man!</h3>
-          <p className="text-zinc-400 text-sm leading-relaxed">
+          <h3 className="text-xl font-display font-bold text-text-primary tracking-tight">Hold on, man!</h3>
+          <p className="text-text-muted text-sm leading-relaxed">
             We are still actively building this feature. Check back soon!
           </p>
         </div>
@@ -265,7 +257,7 @@ function BuildingPopup() {
         {/* Action button */}
         <button
           onClick={() => setIsOpen(false)}
-          className="w-full py-2.5 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm transition-all duration-300 shadow-md shadow-purple-600/20 hover:shadow-purple-500/30 hover:scale-[1.02] active:scale-[0.98]"
+          className="w-full py-2.5 rounded-md bg-accent text-black font-bold text-sm transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
         >
           Okay, got it
         </button>
@@ -273,4 +265,3 @@ function BuildingPopup() {
     </div>
   );
 }
-

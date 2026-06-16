@@ -2,69 +2,93 @@
 
 import React from "react";
 
+const steps = [
+  {
+    name: "Draft Script",
+    description: "Provide keywords or outlines. The AI structures full video scripts with hook highlights and pacing pointers.",
+  },
+  {
+    name: "Create Media",
+    description: "Record locally or drag in raw segments. The timeline maps audio paths and generates speech transcripts automatically.",
+  },
+  {
+    name: "Auto-Cut & Polish",
+    description: "AI scrubs silences, compiles matching B-roll, overlays subtitles, and outputs clean audio tracks.",
+  },
+  {
+    name: "Omni-Channel Share",
+    description: "Compile optimized threads for social channels. Export high-quality media in any format, ready to publish.",
+  },
+];
+
 export default function Workflow() {
   return (
-    <section id="pipeline" className="py-24 max-w-7xl mx-auto px-6 scroll-mt-20">
-      <div className="text-center max-w-3xl mx-auto mb-20">
-        <span className="text-purple-400 text-sm font-extrabold uppercase tracking-widest mb-3 block">STEP-BY-STEP WORKFLOW</span>
-        <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
+    <section id="pipeline" className="py-24 max-w-6xl mx-auto px-6 scroll-mt-20">
+      {/* Section Header */}
+      <div className="max-w-2xl mb-16">
+        <span className="font-mono text-xs text-accent tracking-[0.2em] uppercase mb-4 block">
+          STEP-BY-STEP WORKFLOW
+        </span>
+        <h2 className="font-display text-3xl md:text-5xl font-bold tracking-[-0.03em] text-text-primary mb-4">
           How Stedio Syncs Content
         </h2>
-        <p className="text-zinc-400 text-base">
+        <p className="text-text-muted text-base font-body leading-[1.7]">
           Create high-converting, fully customized publications with minimal manual adjustments.
         </p>
       </div>
 
-      {/* Timeline Pipeline Grid */}
-      <div className="relative">
-        {/* Connector Line */}
-        <div className="hidden lg:block absolute top-1/2 left-8 right-8 h-0.5 bg-linear-to-r from-purple-500 via-indigo-500 to-pink-500/20 -translate-y-1/2 z-0" />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 relative z-10">
-          {/* Step 1 */}
-          <div className="bg-[#08080a] border border-zinc-800/80 p-8 rounded-2xl flex flex-col justify-between group hover:border-purple-500/30 transition-all">
-            <div>
-              <span className="w-8 h-8 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 text-sm font-black mb-6 group-hover:bg-purple-500 group-hover:text-white transition-all">01</span>
-              <h3 className="text-lg font-bold text-white mb-2">Draft Script</h3>
-              <p className="text-zinc-400 text-xs leading-relaxed">
-                Provide keywords or outlines. The AI draft editor structures full video scripts, hook highlights, and pacing pointers.
-              </p>
-            </div>
-          </div>
-
-          {/* Step 2 */}
-          <div className="bg-[#08080a] border border-zinc-800/80 p-8 rounded-2xl flex flex-col justify-between group hover:border-indigo-500/30 transition-all">
-            <div>
-              <span className="w-8 h-8 rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-sm font-black mb-6 group-hover:bg-indigo-500 group-hover:text-white transition-all">02</span>
-              <h3 className="text-lg font-bold text-white mb-2">Create Media</h3>
-              <p className="text-zinc-400 text-xs leading-relaxed">
-                Record locally or drag in raw segments. Our timeline automatically maps audio paths to generate speech transcripts.
-              </p>
-            </div>
-          </div>
-
-          {/* Step 3 */}
-          <div className="bg-[#08080a] border border-zinc-800/80 p-8 rounded-2xl flex flex-col justify-between group hover:border-pink-500/30 transition-all">
-            <div>
-              <span className="w-8 h-8 rounded-full bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-pink-400 text-sm font-black mb-6 group-hover:bg-pink-500 group-hover:text-white transition-all">03</span>
-              <h3 className="text-lg font-bold text-white mb-2">Auto-Cut & Polish</h3>
-              <p className="text-zinc-400 text-xs leading-relaxed">
-                Let AI scrub silences, compile matching B-roll footage layers, overlay subtitles, and output clean content audio.
-              </p>
-            </div>
-          </div>
-
-          {/* Step 4 */}
-          <div className="bg-[#08080a] border border-zinc-800/80 p-8 rounded-2xl flex flex-col justify-between group hover:border-zinc-700 transition-all">
-            <div>
-              <span className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300 text-sm font-black mb-6 group-hover:bg-white group-hover:text-black transition-all">04</span>
-              <h3 className="text-lg font-bold text-white mb-2">Omni-Channel Share</h3>
-              <p className="text-zinc-400 text-xs leading-relaxed">
-                Compile optimized threads for social channels. Export high-quality media frames ready to publish.
-              </p>
-            </div>
+      {/* Horizontal Timeline — Desktop */}
+      <div className="hidden lg:block">
+        {/* Connector line */}
+        <div className="relative">
+          <div className="absolute top-0 left-0 right-0 h-px bg-border" />
+          {/* Accent dots */}
+          <div className="flex justify-between relative">
+            {steps.map((_, i) => (
+              <div
+                key={i}
+                className="w-3 h-3 rounded-full bg-accent -mt-1.5 relative z-10"
+                style={{ marginLeft: i === 0 ? "0" : "auto", marginRight: i === steps.length - 1 ? "0" : "auto" }}
+              />
+            ))}
           </div>
         </div>
+
+        {/* Steps */}
+        <div className="grid grid-cols-4 gap-8 mt-8">
+          {steps.map((step) => (
+            <div key={step.name} className="flex flex-col">
+              <div className="w-full h-0.5 bg-accent mb-6" />
+              <h3 className="font-display text-base font-bold text-text-primary mb-2">
+                {step.name}
+              </h3>
+              <p className="text-text-muted text-sm font-body leading-relaxed">
+                {step.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Vertical Stack — Mobile */}
+      <div className="lg:hidden flex flex-col gap-8">
+        {steps.map((step) => (
+          <div key={step.name} className="flex gap-4">
+            {/* Vertical line + dot */}
+            <div className="flex flex-col items-center shrink-0">
+              <div className="w-3 h-3 rounded-full bg-accent" />
+              <div className="w-px flex-1 bg-border" />
+            </div>
+            <div className="pb-4">
+              <h3 className="font-display text-base font-bold text-text-primary mb-1.5">
+                {step.name}
+              </h3>
+              <p className="text-text-muted text-sm font-body leading-relaxed">
+                {step.description}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );

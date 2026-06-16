@@ -1,44 +1,35 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #030303;
-  --color-foreground: #fafafa;
-  --font-sans: var(--font-geist-sans), sans-serif;
-  --font-mono: var(--font-geist-mono), monospace;
-  
-  --color-brand-purple: #a855f7;
-  --color-brand-indigo: #6366f1;
-  --color-brand-violet: #8b5cf6;
-  
-  --animate-float: float 6s ease-in-out infinite;
-  --animate-pulse-slow: pulse-slow 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  --animate-glow: glow 2s ease-in-out infinite alternate;
-  --animate-spin-slow: spin 20s linear infinite;
+  --color-background: #0A0A0B;
+  --color-foreground: #F2F2F0;
+  --color-surface: #111113;
+  --color-border: #1E1E22;
+  --color-accent: #E8FF47;
+  --color-accent-red: #FF4D4D;
+  --color-text-primary: #F2F2F0;
+  --color-text-muted: #6B6B72;
 
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
-  @keyframes pulse-slow {
-    0%, 100% { opacity: 0.8; }
-    50% { opacity: 0.3; }
-  }
-  @keyframes glow {
-    from {
-      text-shadow: 0 0 10px rgba(168, 85, 247, 0.2), 0 0 20px rgba(168, 85, 247, 0.2);
-    }
-    to {
-      text-shadow: 0 0 20px rgba(99, 102, 241, 0.4), 0 0 30px rgba(99, 102, 241, 0.4);
-    }
-  }
+  --animate-marquee: marquee 25s linear infinite;
 }
 
+/* ── Custom Font Family Utilities ── */
+.font-display {
+  font-family: var(--font-dm-sans), sans-serif;
+}
+.font-body {
+  font-family: var(--font-inter), sans-serif;
+}
+.font-mono {
+  font-family: var(--font-jetbrains-mono), monospace;
+}
+
+/* ── Base ── */
 :root {
-  --background: #030303;
-  --foreground: #fafafa;
+  --background: #0A0A0B;
+  --foreground: #F2F2F0;
 }
 
-/* Custom base elements */
 html {
   scroll-behavior: smooth;
   background-color: var(--background);
@@ -49,126 +40,52 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar customizations */
+/* ── Selection ── */
+::selection {
+  background: rgba(232, 255, 71, 0.18);
+  color: #F2F2F0;
+}
+
+/* ── Scrollbar ── */
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: #0A0A0B;
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #1E1E22;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: #2A2A30;
 }
 
-/* Glassmorphism custom classes */
-.glass-panel {
-  background: rgba(10, 10, 12, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* ── Marquee / Ticker Tape ── */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
-.glass-panel-light {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+/* ── FAQ Accordion Transition ── */
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s ease;
+  opacity: 0;
 }
 
-.glass-input {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  outline: none;
-  transition: all 0.3s ease;
-}
-
-.glass-input:focus {
-  border-color: rgba(168, 85, 247, 0.5);
-  box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
-}
-
-.glow-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(to bottom right, rgba(168, 85, 247, 0.3), rgba(99, 102, 241, 0.1), transparent);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-/* Custom base elements */
-html {
-  scroll-behavior: smooth;
-  background-color: var(--background);
-  color: var(--foreground);
-}
-
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  overflow-x: hidden;
-}
-
-/* Scrollbar customizations */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: #09090b;
-}
-::-webkit-scrollbar-thumb {
-  background: #27272a;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
-}
-
-/* Glassmorphism custom classes */
-.glass-panel {
-  background: rgba(10, 10, 12, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-panel-light {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.glass-input {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  outline: none;
-  transition: all 0.3s ease;
-}
-
-.glass-input:focus {
-  border-color: rgba(168, 85, 247, 0.5);
-  box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
-}
-
-.glow-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(to bottom right, rgba(168, 85, 247, 0.3), rgba(99, 102, 241, 0.1), transparent);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+.faq-answer.open {
+  max-height: 300px;
+  opacity: 1;
 }
