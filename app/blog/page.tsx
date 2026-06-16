@@ -2,7 +2,7 @@ import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Image from "next/image";
-import { Calendar, Clock, ArrowRight, Sparkles } from "lucide-react";
+import { Calendar, Clock, ArrowRight } from "lucide-react";
 
 interface BlogPost {
   id: string;
@@ -75,10 +75,6 @@ export default function BlogPage() {
 
         {/* Hero Section */}
         <section className="pt-32 pb-16 px-6 max-w-5xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/5 text-purple-300 text-xs font-semibold tracking-wide mb-6">
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-            Insights & Guides
-          </div>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-4">
             The Edito.ai{" "}
             <span className="bg-linear-to-r from-purple-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">

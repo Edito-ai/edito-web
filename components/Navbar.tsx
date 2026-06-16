@@ -20,10 +20,7 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleActionClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    window.dispatchEvent(new Event("show-building-popup"));
-  };
+
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-4 pointer-events-none">
@@ -62,18 +59,18 @@ export default function Navbar() {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
-            <button
-              onClick={handleActionClick}
+            <Link
+              href="/login"
               className="px-4 py-1.5 rounded-lg text-[13px] font-semibold text-zinc-300 hover:text-white hover:bg-white/6 transition-all duration-200"
             >
               Sign In
-            </button>
-            <button
-              onClick={handleActionClick}
+            </Link>
+            <Link
+              href="/register"
               className="px-5 py-2 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-[13px] transition-all duration-300 shadow-md shadow-purple-600/20 hover:shadow-purple-500/30 hover:scale-[1.02] active:scale-[0.98]"
             >
               Get Started Free
-            </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -109,18 +106,20 @@ export default function Navbar() {
             ))}
             <div className="h-px bg-zinc-800/60 my-2" />
             <div className="flex flex-col gap-3 pt-1">
-              <button
-                onClick={handleActionClick}
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
                 className="w-full py-2.5 rounded-xl border border-zinc-800 hover:bg-zinc-800/30 text-zinc-300 font-semibold text-sm text-center transition-colors"
               >
                 Sign In
-              </button>
-              <button
-                onClick={handleActionClick}
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setMobileMenuOpen(false)}
                 className="w-full py-2.5 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 text-white font-semibold text-sm text-center transition-colors shadow-lg shadow-purple-600/15"
               >
                 Get Started Free
-              </button>
+              </Link>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Sparkles, Code, Heart, MessageSquare } from "lucide-react";
+import { Code, Heart, MessageSquare } from "lucide-react";
 
 export default function AboutPage() {
   return (
@@ -15,10 +15,6 @@ export default function AboutPage() {
 
         {/* Hero Section */}
         <section className="pt-32 pb-16 px-6 max-w-5xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-950/80 text-zinc-400 text-xs font-medium tracking-wide mb-6">
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-            Under the hood
-          </div>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-6">
             {"We're building the editor we "}
             <span className="bg-linear-to-r from-purple-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">
