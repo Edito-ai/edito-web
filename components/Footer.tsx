@@ -11,10 +11,11 @@ export default function Footer() {
           <div className="flex items-center">
             <Image
               src="/logo_dark_v3.png"
-              alt="stedio.ai"
+              alt="Stedio.ai"
               width={100}
               height={25}
-              className="h-10 w-auto object-contain"
+              className="h-7 w-auto object-contain"
+              style={{ width: "auto" }}
             />
           </div>
           <p className="text-xs text-text-muted font-body leading-relaxed max-w-sm">

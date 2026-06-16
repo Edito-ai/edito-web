@@ -67,10 +67,11 @@ export default function LoginPage() {
           <Link href="/" className="transition-opacity hover:opacity-80">
             <Image
               src="/logo_dark_v3.png"
-              alt="stedio.ai"
+              alt="Stedio.ai"
               width={130}
               height={32}
               className="h-10 w-auto object-contain"
+              style={{ width: "auto" }}
               priority
             />
           </Link>

@@ -54,13 +54,14 @@ export default function Navbar() {
       >
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center shrink-0">
+          <Link href="/" className="flex items-center shrink-0 group">
             <Image
               src="/logo_dark_v3.png"
-              alt="stedio.ai"
-              width={120}
-              height={30}
-              className="h-10 w-auto object-contain"
+              alt="Stedio.ai"
+              width={130}
+              height={32}
+              className="h-8 w-auto object-contain transition-transform group-hover:scale-102 duration-300"
+              style={{ width: "auto" }}
               priority
             />
           </Link>

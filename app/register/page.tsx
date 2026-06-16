@@ -568,9 +568,10 @@ export default function RegisterPage() {
             <Image
               src="/logo_dark_v3.png"
               alt="Stedio.ai"
-              width={40}
-              height={40}
-              className="h-10 w-10 object-contain"
+              width={140}
+              height={35}
+              className="h-10 w-auto object-contain"
+              style={{ width: "auto" }}
               priority
             />
           </Link>
