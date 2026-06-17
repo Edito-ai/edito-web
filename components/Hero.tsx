@@ -59,7 +59,7 @@ export default function Hero() {
               <div className="w-2.5 h-2.5 rounded-full bg-accent/50" />
               <div className="w-2.5 h-2.5 rounded-full bg-text-muted/40" />
             </div>
-            <span className="text-[10px] font-mono text-text-muted">Stedtio-workspace.ai</span>
+            <span className="text-[10px] font-mono text-text-muted">stedtio.com</span>
             <div className="w-8" />
           </div>
 
@@ -139,7 +139,7 @@ export default function Hero() {
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between px-3 py-1.5 border-b border-border">
-              <span className="text-xs font-mono font-semibold text-text-muted">Stedtio.ai Product Walkthrough</span>
+              <span className="text-xs font-mono font-semibold text-text-muted">Stedtio Product Walkthrough</span>
               <button
                 onClick={() => setShowDemoModal(false)}
                 className="p-1 rounded-md text-text-muted hover:text-text-primary transition-colors"

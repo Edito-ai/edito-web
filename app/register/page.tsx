@@ -58,6 +58,12 @@ const FOLLOWER_RANGES = [
 
 const TOTAL_STEPS = 5;
 
+const setAuthCookie = (token: string) => {
+  if (typeof window !== "undefined") {
+    document.cookie = `Stedtio_token=${token}; path=/; SameSite=Lax`;
+  }
+};
+
 export default function RegisterPage() {
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
@@ -253,7 +259,7 @@ export default function RegisterPage() {
       localStorage.setItem("Stedtio_token", data.token);
       localStorage.setItem("Stedtio_user", JSON.stringify(data.user));
       // Sync to cookie for server-side middleware protection
-      document.cookie = `Stedtio_token=${data.token}; path=/; SameSite=Lax`;
+      setAuthCookie(data.token);
       window.dispatchEvent(new Event("auth-change"));
       router.push("/dashboard");
     } catch {
@@ -569,7 +575,7 @@ export default function RegisterPage() {
           <Link href="/" className="transition-opacity hover:opacity-80">
             <img
               src="http://localhost:5000/api/assets/logo_dark_v3.png"
-              alt="Stedtio.ai"
+              alt="Stedtio"
               className="h-10 w-auto object-contain"
             />
           </Link>

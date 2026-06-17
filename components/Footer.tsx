@@ -11,7 +11,7 @@ export default function Footer() {
           <div className="flex items-center">
             <img
               src="http://localhost:5000/api/assets/logo_dark_v3.png"
-              alt="Stedtio.ai"
+              alt="Stedtio"
               className="h-7 w-auto object-contain"
             />
           </div>
@@ -56,7 +56,7 @@ export default function Footer() {
 
       {/* Bottom Bar */}
       <div className="max-w-6xl mx-auto px-6 mt-16 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-text-muted">
-        <span>&copy; 2026 Stedtio.ai. All rights reserved.</span>
+        <span>&copy; 2026 Stedtio. All rights reserved.</span>
         
         {/* Social Icons */}
         <div className="flex items-center gap-4">

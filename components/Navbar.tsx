@@ -57,7 +57,7 @@ export default function Navbar() {
           <Link href="/" className="flex items-center shrink-0 group">
             <img
               src="http://localhost:5000/api/assets/logo_dark_v3.png"
-              alt="Stedtio.ai"
+              alt="Stedtio"
               className="h-8 w-auto object-contain transition-transform group-hover:scale-102 duration-300"
             />
           </Link>

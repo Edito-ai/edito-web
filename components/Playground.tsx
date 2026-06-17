@@ -66,8 +66,8 @@ export default function Playground() {
   // Sandbox - Caption
   const [captionTheme, setCaptionTheme] = useState("3 editing tips to double video retention");
   const [captionOutput, setCaptionOutput] = useState({
-    tiktok: "🎥 Want to DOUBLE your video retention? Stop doing this! 👇\n\n1️⃣ Aggressive J-Cuts: Let the audio lead the visual shift.\n2️⃣ B-Roll every 3s: Keep the visual cortex stimulated.\n3️⃣ Visual zooms: Emphasize core statements.\n\n#editingtips #filmmaker #socialgrowth #Stedtioai",
-    linkedin: "The average watch time for video is dropping year-over-year. How do you fight back?\n\nHere are 3 video editing principles we use at Stedtio.ai:\n\n💡 1. Prioritize J-Cuts: Let the audio pull the viewer into the next shot.\n🚀 2. Scale the pace: Switch visual patterns every 2.5 - 4 seconds.\n📈 3. Kinetic typography: Caption key moments, not just words.\n\nWhat's your biggest retention strategy?",
+    tiktok: "🎥 Want to DOUBLE your video retention? Stop doing this! 👇\n\n1️⃣ Aggressive J-Cuts: Let the audio lead the visual shift.\n2️⃣ B-Roll every 3s: Keep the visual cortex stimulated.\n3️⃣ Visual zooms: Emphasize core statements.\n\n#editingtips #filmmaker #socialgrowth #Stedtio",
+    linkedin: "The average watch time for video is dropping year-over-year. How do you fight back?\n\nHere are 3 video editing principles we use at Stedtio:\n\n💡 1. Prioritize J-Cuts: Let the audio pull the viewer into the next shot.\n🚀 2. Scale the pace: Switch visual patterns every 2.5 - 4 seconds.\n📈 3. Kinetic typography: Caption key moments, not just words.\n\nWhat's your biggest retention strategy?",
     twitter: "If you want to keep viewers hooked, stop editing chronologically. 🧵\n\nHere are 3 visual editing rules that double video retention:\n\n1/ The J-Cut Transition: Sound precedes visual. It tricks the brain into anticipating the next scene smoothly."
   });
   const [activeCaptionTab, setActiveCaptionTab] = useState<"tiktok" | "linkedin" | "twitter">("tiktok");
@@ -75,7 +75,7 @@ export default function Playground() {
   const handleGenerateCaptions = () => {
     const base = captionTheme || "editing secrets";
     setCaptionOutput({
-      tiktok: `🎥 VIRAL SHORT: "${base}" 🔥\n\nHere is what they don't tell you:\n👉 Cut out breaths & micro-pauses\n👉 Zoom in 1.1x on key phrases\n👉 Punchy captions on screen\n\nBookmark this for later! 💾 #editors #growthtips #Stedtioai`,
+      tiktok: `🎥 VIRAL SHORT: "${base}" 🔥\n\nHere is what they don't tell you:\n👉 Cut out breaths & micro-pauses\n👉 Zoom in 1.1x on key phrases\n👉 Punchy captions on screen\n\nBookmark this for later! 💾 #editors #growthtips #Stedtio`,
       linkedin: `Struggling to make an impact with "${base}"?\n\nAfter analyzing 500+ top-performing media campaigns, here's what actually drives viewer retention:\n\n1. Action-First Hooks: Start mid-motion.\n2. Contextual Subtitles: Keep sound-off users engaged.\n3. Emotional Color Grades.\n\nWhat has been your experience?`,
       twitter: `Writing captions for "${base}"? Here is the cheat sheet to boost engagement by 80%:\n\n• Use sound effects (SFX) on visual changes\n• Apply zoom keyframes to emphasize emotions\n• Match typography with the mood\n\nSimple but effective.`
     });

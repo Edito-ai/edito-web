@@ -6,6 +6,12 @@ import Link from "next/link";
 import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 
 
+const setAuthCookie = (token: string) => {
+  if (typeof window !== "undefined") {
+    document.cookie = `Stedtio_token=${token}; path=/; SameSite=Lax`;
+  }
+};
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -38,7 +44,7 @@ export default function LoginPage() {
       localStorage.setItem("Stedtio_token", data.token);
       localStorage.setItem("Stedtio_user", JSON.stringify(data.user));
       // Sync to cookie for server-side middleware protection
-      document.cookie = `Stedtio_token=${data.token}; path=/; SameSite=Lax`;
+      setAuthCookie(data.token);
       window.dispatchEvent(new Event("auth-change"));
       router.push("/dashboard");
     } catch {
@@ -69,7 +75,7 @@ export default function LoginPage() {
           <Link href="/" className="transition-opacity hover:opacity-80">
             <img
               src="http://localhost:5000/api/assets/logo_dark_v3.png"
-              alt="Stedtio.ai"
+              alt="Stedtio"
               className="h-10 w-auto object-contain"
             />
           </Link>
@@ -88,7 +94,7 @@ export default function LoginPage() {
               Welcome back
             </h1>
             <p className="text-text-muted text-sm">
-              Sign in to your Stedtio.ai account
+              Sign in to your Stedtio account
             </p>
           </div>
 
