@@ -35,7 +35,7 @@ export default function Features() {
           A Multi-Tool Workspace Powered by AI
         </h2>
         <p className="text-text-muted text-base font-body leading-[1.7]">
-          Say goodbye to jumping between writing portals, editing timelines, and social hubs. Stedio covers the full production lifecycle.
+          Say goodbye to jumping between writing portals, editing timelines, and social hubs. Stedtio covers the full production lifecycle.
         </p>
       </div>
 

@@ -4,7 +4,7 @@ import React from "react";
 
 const testimonials = [
   {
-    quote: "Before stedio.ai, our podcast pipeline required three tools: desilencing scripts, standard caption apps, and a video compiler. Now we run everything in stedio in 15 minutes instead of 2 hours. Game changer.",
+    quote: "Before Stedtio.ai, our podcast pipeline required three tools: desilencing scripts, standard caption apps, and a video compiler. Now we run everything in Stedtio in 15 minutes instead of 2 hours. Game changer.",
     name: "Marek Krawczyk",
     title: "Video Producer, Creators Lab",
   },
@@ -14,7 +14,7 @@ const testimonials = [
     title: "TikTok Creator (1.2M followers)",
   },
   {
-    quote: "We operate a newsletter combined with daily short clips. Stedio\u2019s ability to ingest our draft, build caption variations, and format video ratios automatically cut our agency\u2019s editing budget by 40% this quarter.",
+    quote: "We operate a newsletter combined with daily short clips. Stedtio\u2019s ability to ingest our draft, build caption variations, and format video ratios automatically cut our agency\u2019s editing budget by 40% this quarter.",
     name: "Jordan Hayes",
     title: "Founder, MediaGroup Agency",
   },
@@ -32,7 +32,7 @@ export default function Testimonials() {
           Used by Top-Tier Creators
         </h2>
         <p className="text-text-muted text-base font-body leading-[1.7]">
-          See how editors and content production spaces are scaling their delivery metrics with stedio.ai.
+          See how editors and content production spaces are scaling their delivery metrics with Stedtio.ai.
         </p>
       </div>
 

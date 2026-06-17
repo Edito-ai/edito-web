@@ -66,8 +66,8 @@ export default function Playground() {
   // Sandbox - Caption
   const [captionTheme, setCaptionTheme] = useState("3 editing tips to double video retention");
   const [captionOutput, setCaptionOutput] = useState({
-    tiktok: "🎥 Want to DOUBLE your video retention? Stop doing this! 👇\n\n1️⃣ Aggressive J-Cuts: Let the audio lead the visual shift.\n2️⃣ B-Roll every 3s: Keep the visual cortex stimulated.\n3️⃣ Visual zooms: Emphasize core statements.\n\n#editingtips #filmmaker #socialgrowth #stedioai",
-    linkedin: "The average watch time for video is dropping year-over-year. How do you fight back?\n\nHere are 3 video editing principles we use at stedio.ai:\n\n💡 1. Prioritize J-Cuts: Let the audio pull the viewer into the next shot.\n🚀 2. Scale the pace: Switch visual patterns every 2.5 - 4 seconds.\n📈 3. Kinetic typography: Caption key moments, not just words.\n\nWhat's your biggest retention strategy?",
+    tiktok: "🎥 Want to DOUBLE your video retention? Stop doing this! 👇\n\n1️⃣ Aggressive J-Cuts: Let the audio lead the visual shift.\n2️⃣ B-Roll every 3s: Keep the visual cortex stimulated.\n3️⃣ Visual zooms: Emphasize core statements.\n\n#editingtips #filmmaker #socialgrowth #Stedtioai",
+    linkedin: "The average watch time for video is dropping year-over-year. How do you fight back?\n\nHere are 3 video editing principles we use at Stedtio.ai:\n\n💡 1. Prioritize J-Cuts: Let the audio pull the viewer into the next shot.\n🚀 2. Scale the pace: Switch visual patterns every 2.5 - 4 seconds.\n📈 3. Kinetic typography: Caption key moments, not just words.\n\nWhat's your biggest retention strategy?",
     twitter: "If you want to keep viewers hooked, stop editing chronologically. 🧵\n\nHere are 3 visual editing rules that double video retention:\n\n1/ The J-Cut Transition: Sound precedes visual. It tricks the brain into anticipating the next scene smoothly."
   });
   const [activeCaptionTab, setActiveCaptionTab] = useState<"tiktok" | "linkedin" | "twitter">("tiktok");
@@ -75,7 +75,7 @@ export default function Playground() {
   const handleGenerateCaptions = () => {
     const base = captionTheme || "editing secrets";
     setCaptionOutput({
-      tiktok: `🎥 VIRAL SHORT: "${base}" 🔥\n\nHere is what they don't tell you:\n👉 Cut out breaths & micro-pauses\n👉 Zoom in 1.1x on key phrases\n👉 Punchy captions on screen\n\nBookmark this for later! 💾 #editors #growthtips #stedioai`,
+      tiktok: `🎥 VIRAL SHORT: "${base}" 🔥\n\nHere is what they don't tell you:\n👉 Cut out breaths & micro-pauses\n👉 Zoom in 1.1x on key phrases\n👉 Punchy captions on screen\n\nBookmark this for later! 💾 #editors #growthtips #Stedtioai`,
       linkedin: `Struggling to make an impact with "${base}"?\n\nAfter analyzing 500+ top-performing media campaigns, here's what actually drives viewer retention:\n\n1. Action-First Hooks: Start mid-motion.\n2. Contextual Subtitles: Keep sound-off users engaged.\n3. Emotional Color Grades.\n\nWhat has been your experience?`,
       twitter: `Writing captions for "${base}"? Here is the cheat sheet to boost engagement by 80%:\n\n• Use sound effects (SFX) on visual changes\n• Apply zoom keyframes to emphasize emotions\n• Match typography with the mood\n\nSimple but effective.`
     });
@@ -126,7 +126,7 @@ export default function Playground() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <span className="text-indigo-400 text-xs font-extrabold uppercase tracking-widest mb-3 block">LIVE INTERACTIVE WORKSPACE</span>
-          <h2 className="text-3xl md:text-4xl font-extrabold mb-4">Try the Stedio Workspace Simulator</h2>
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-4">Try the Stedtio Workspace Simulator</h2>
           <p className="text-zinc-400 text-sm sm:text-base">
             Explore how easy it is to handle tasks inside our ecosystem. Click on the features below to test them out.
           </p>
@@ -202,9 +202,9 @@ export default function Playground() {
                   <Sparkles className="w-2 h-2 text-zinc-400" />
                 </div>
                 <span className="text-xs font-semibold text-zinc-400">
-                  {sandboxTab === "write" && "Stedio Writer v2.0"}
-                  {sandboxTab === "caption" && "Stedio Caption Generator"}
-                  {sandboxTab === "video" && "Stedio Video Timeline Studio"}
+                  {sandboxTab === "write" && "Stedtio Writer v2.0"}
+                  {sandboxTab === "caption" && "Stedtio Caption Generator"}
+                  {sandboxTab === "video" && "Stedtio Video Timeline Studio"}
                 </span>
               </div>
               <div className="flex gap-2">

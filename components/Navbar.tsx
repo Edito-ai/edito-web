@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
+
 import Link from "next/link";
 import { Menu, X, Sparkles } from "lucide-react";
 
@@ -20,7 +20,7 @@ export default function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
 
     const checkUser = () => {
-      const stored = localStorage.getItem("stedio_user");
+      const stored = localStorage.getItem("Stedtio_user");
       if (stored) {
         try {
           setUser(JSON.parse(stored));
@@ -55,14 +55,10 @@ export default function Navbar() {
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0 group">
-            <Image
-              src="/logo_dark_v3.png"
-              alt="Stedio.ai"
-              width={130}
-              height={32}
+            <img
+              src="http://localhost:5000/api/assets/logo_dark_v3.png"
+              alt="Stedtio.ai"
               className="h-8 w-auto object-contain transition-transform group-hover:scale-102 duration-300"
-              style={{ width: "auto" }}
-              priority
             />
           </Link>
 
@@ -77,6 +73,14 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
+            {user && (
+              <Link
+                href="/dashboard"
+                className="px-3 py-1.5 rounded-md text-[13px] font-medium text-text-muted hover:text-text-primary transition-all duration-200"
+              >
+                Dashboard
+              </Link>
+            )}
           </div>
 
           {/* Desktop CTAs */}
@@ -86,10 +90,16 @@ export default function Navbar() {
                 <span className="text-[13px] font-medium text-text-muted">
                   Hello, <span className="text-text-primary font-semibold">{user.name}</span>
                 </span>
+                <Link
+                  href="/dashboard"
+                  className="px-4 py-1.5 rounded-md bg-accent text-black font-bold text-[13px] transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
+                >
+                  Dashboard
+                </Link>
                 <button
                   onClick={() => {
-                    localStorage.removeItem("stedio_token");
-                    localStorage.removeItem("stedio_user");
+                    localStorage.removeItem("Stedtio_token");
+                    localStorage.removeItem("Stedtio_user");
                     window.dispatchEvent(new Event("auth-change"));
                   }}
                   className="px-4 py-1.5 rounded-md text-[13px] font-semibold text-text-muted hover:text-text-primary transition-all duration-200 cursor-pointer"
@@ -146,6 +156,15 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
+            {user && (
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2.5 rounded-md text-[15px] font-medium text-text-muted hover:text-text-primary transition-all"
+              >
+                Dashboard
+              </Link>
+            )}
             <div className="h-px bg-border my-2" />
             <div className="flex flex-col gap-3 pt-1">
               {user ? (
@@ -153,10 +172,17 @@ export default function Navbar() {
                   <span className="text-[15px] font-medium text-text-muted px-3 py-1">
                     Hello, <span className="text-text-primary font-semibold">{user.name}</span>
                   </span>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full py-2.5 rounded-md bg-accent text-black font-bold text-sm text-center transition-all"
+                  >
+                    Go to Dashboard
+                  </Link>
                   <button
                     onClick={() => {
-                      localStorage.removeItem("stedio_token");
-                      localStorage.removeItem("stedio_user");
+                      localStorage.removeItem("Stedtio_token");
+                      localStorage.removeItem("Stedtio_user");
                       window.dispatchEvent(new Event("auth-change"));
                       setMobileMenuOpen(false);
                     }}

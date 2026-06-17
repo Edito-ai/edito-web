@@ -75,7 +75,7 @@ export default function BlogPage() {
         {/* Hero Section */}
         <section className="pt-32 pb-16 px-6 max-w-5xl mx-auto text-center relative z-10">
           <h1 className="text-4xl md:text-5xl font-extrabold font-display tracking-tight text-text-primary mb-4">
-            The Stedio.ai{" "}
+            The Stedtio.ai{" "}
             <span className="text-accent">
               Blog
             </span>

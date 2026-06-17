@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+
 import {
   Eye,
   EyeOff,
@@ -250,10 +250,12 @@ export default function RegisterPage() {
         setLoading(false);
         return;
       }
-      localStorage.setItem("stedio_token", data.token);
-      localStorage.setItem("stedio_user", JSON.stringify(data.user));
+      localStorage.setItem("Stedtio_token", data.token);
+      localStorage.setItem("Stedtio_user", JSON.stringify(data.user));
+      // Sync to cookie for server-side middleware protection
+      document.cookie = `Stedtio_token=${data.token}; path=/; SameSite=Lax`;
       window.dispatchEvent(new Event("auth-change"));
-      router.push("/");
+      router.push("/dashboard");
     } catch {
       setError("Unable to connect to server");
       setLoading(false);
@@ -565,14 +567,10 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="mb-6 flex justify-center">
           <Link href="/" className="transition-opacity hover:opacity-80">
-            <Image
-              src="/logo_dark_v3.png"
-              alt="Stedio.ai"
-              width={140}
-              height={35}
+            <img
+              src="http://localhost:5000/api/assets/logo_dark_v3.png"
+              alt="Stedtio.ai"
               className="h-10 w-auto object-contain"
-              style={{ width: "auto" }}
-              priority
             />
           </Link>
         </div>

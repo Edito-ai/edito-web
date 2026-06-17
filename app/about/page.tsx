@@ -22,7 +22,7 @@ export default function AboutPage() {
             </span>
           </h1>
           <p className="text-text-muted text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-            We are a tiny team of creators and developers who got tired of spending hours on repetitive editing tasks—like writing captions, trimming pauses, and formatting transcripts. We built Stedio.ai to put the tedious work on autopilot.
+            We are a tiny team of creators and developers who got tired of spending hours on repetitive editing tasks—like writing captions, trimming pauses, and formatting transcripts. We built Stedtio.ai to put the tedious work on autopilot.
           </p>
         </section>
 
@@ -35,7 +35,7 @@ export default function AboutPage() {
               </h2>
               <div className="space-y-4 text-text-muted leading-relaxed text-[14px]">
                 <p>
-                  Stedio.ai started as a side project between three friends. We were editing YouTube videos and TikToks on weekends, and noticed how much time we wasted doing the same tedious tasks over and over—transcribing audio, typing captions, and adjusting aspect ratios.
+                  Stedtio.ai started as a side project between three friends. We were editing YouTube videos and TikToks on weekends, and noticed how much time we wasted doing the same tedious tasks over and over—transcribing audio, typing captions, and adjusting aspect ratios.
                 </p>
                 <p>
                   {"We built a few custom scripts to automate those steps for ourselves. When we showed them to other creator friends, they wanted to use them too. That's when we realized this could help a lot more people. We are just starting our journey, and we're committed to making content creation simple and fun."}
@@ -81,13 +81,13 @@ export default function AboutPage() {
         {/* Feedback CTA */}
         <section className="py-16 px-6 max-w-4xl mx-auto text-center relative z-10 mb-20 rounded-2xl border border-border bg-surface shadow-xl">
           <h2 className="text-2xl font-bold font-display text-text-primary mb-3">
-            Help us build Stedio.ai
+            Help us build Stedtio.ai
           </h2>
           <p className="text-text-muted max-w-lg mx-auto mb-6 text-sm leading-relaxed">
             We are currently in active beta and would love to hear your thoughts. If you have feature requests, bugs to report, or just want to say hi, feel free to reach out.
           </p>
           <a
-            href="mailto:team@stedio.ai"
+            href="mailto:team@Stedtio.ai"
             className="inline-block px-5 py-2.5 rounded-lg bg-accent text-background font-bold text-xs transition-all duration-200 hover:opacity-90 active:scale-[0.98] cursor-pointer"
           >
             Send Us an Email

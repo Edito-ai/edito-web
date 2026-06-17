@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+
 
 export default function Footer() {
   return (
@@ -9,13 +9,10 @@ export default function Footer() {
         {/* Logo & Pitch */}
         <div className="md:col-span-4 flex flex-col gap-4">
           <div className="flex items-center">
-            <Image
-              src="/logo_dark_v3.png"
-              alt="Stedio.ai"
-              width={100}
-              height={25}
+            <img
+              src="http://localhost:5000/api/assets/logo_dark_v3.png"
+              alt="Stedtio.ai"
               className="h-7 w-auto object-contain"
-              style={{ width: "auto" }}
             />
           </div>
           <p className="text-xs text-text-muted font-body leading-relaxed max-w-sm">
@@ -59,7 +56,7 @@ export default function Footer() {
 
       {/* Bottom Bar */}
       <div className="max-w-6xl mx-auto px-6 mt-16 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-text-muted">
-        <span>&copy; 2026 Stedio.ai. All rights reserved.</span>
+        <span>&copy; 2026 Stedtio.ai. All rights reserved.</span>
         
         {/* Social Icons */}
         <div className="flex items-center gap-4">

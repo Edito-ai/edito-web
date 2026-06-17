@@ -5,8 +5,8 @@ import { Plus, Minus } from "lucide-react";
 
 const faqData = [
   {
-    q: "What makes Stedio.ai different from standard editors?",
-    a: "Stedio.ai unites all content workflows in a single workspace. Instead of drafting a script in Docs, generating captions on ChatGPT, and exporting to Premiere — Stedio lets you write, create subtitles, auto-cut silences, insert B-roll, and compile social variants in one visual workflow.",
+    q: "What makes Stedtio.ai different from standard editors?",
+    a: "Stedtio.ai unites all content workflows in a single workspace. Instead of drafting a script in Docs, generating captions on ChatGPT, and exporting to Premiere — Stedtio lets you write, create subtitles, auto-cut silences, insert B-roll, and compile social variants in one visual workflow.",
   },
   {
     q: "How does the AI Video Editor work?",
@@ -14,7 +14,7 @@ const faqData = [
   },
   {
     q: "Can I export in different ratios like 9:16 and 16:9?",
-    a: "Absolutely. Stedio.ai features smart reframing that tracks the primary focus of your horizontal video (16:9) and auto-centers it to fit vertical outputs (9:16) for TikTok, Reels, and YouTube Shorts.",
+    a: "Absolutely. Stedtio.ai features smart reframing that tracks the primary focus of your horizontal video (16:9) and auto-centers it to fit vertical outputs (9:16) for TikTok, Reels, and YouTube Shorts.",
   },
   {
     q: "Is there a limit on video upload or processing?",

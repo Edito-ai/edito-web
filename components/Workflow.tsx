@@ -30,7 +30,7 @@ export default function Workflow() {
           STEP-BY-STEP WORKFLOW
         </span>
         <h2 className="font-display text-3xl md:text-5xl font-bold tracking-[-0.03em] text-text-primary mb-4">
-          How Stedio Syncs Content
+          How Stedtio Syncs Content
         </h2>
         <p className="text-text-muted text-base font-body leading-[1.7]">
           Create high-converting, fully customized publications with minimal manual adjustments.

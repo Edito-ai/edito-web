@@ -1,6 +1,7 @@
-# Stedio.ai Frontend — Development Guide
+# Stedtio.ai Frontend — Development Guide
 
 ## Build & Run Commands
+
 - **Install Dependencies**: `npm install`
 - **Development Server**: `npm run dev` (Runs `next dev`)
 - **Build Application**: `npm run build` (Runs `next build`)
@@ -8,6 +9,7 @@
 - **Linting**: `npm run lint` (Runs `eslint`)
 
 ## Code Guidelines
+
 - **Language**: TypeScript (`.ts`, `.tsx`).
 - **Styling**: Tailwind CSS (version 4) with utility classes. Keep class names clean and avoid arbitrary values where possible.
 - **Components**: Focus on functional React components using React hooks (`useState`, `useEffect`).
