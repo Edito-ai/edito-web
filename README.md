@@ -1,6 +1,6 @@
 # 🎬 STEDTIO FRONTEND: The Ultimate Creator Cockpit! 🚀
 
-Welcome to **Stedtio**, the sleekest, fastest, and most gorgeous creator cockpit ever compiled. If you got tired of jumping between draft Google Docs, browser caption builders, and heavy desktop timelines just to edit a 30-second short, you've landed in the absolute right spot. 
+Welcome to **Stedtio**, the sleekest, fastest, and most gorgeous creator cockpit ever compiled. If you got tired of jumping between draft Google Docs, browser caption builders, and heavy desktop timelines just to edit a 30-second short, you've landed in the absolute right spot.
 
 Stedtio pulls together writing, caption generation, and smart video editing into a single glassmorphic, visual layout that feels like driving a spaceship. Let's get this portal active!
 
@@ -25,6 +25,7 @@ Now open [http://localhost:3000](http://localhost:3000) in your browser and watc
 ## 🛠️ The Tech Engine (Frontend Core)
 
 Our interface is built on a stack designed for pure speed and premium aesthetics:
+
 - **Next.js (App Router)**: The fast, React-based compiler fueling the layout routing.
 - **Lucide React**: Vector icons for crisp, pixel-perfect visuals.
 - **Vanilla CSS + Next.js Fonts**: Outfitted with Google Fonts (Inter, DM Sans, and JetBrains Mono) for top-tier typography.
@@ -35,6 +36,7 @@ Our interface is built on a stack designed for pure speed and premium aesthetics
 ## 📂 The Map (Ecosystem Directory)
 
 Here is a breakdown of what lies inside the directory:
+
 ```text
 edito/
 ├── app/                  # 📍 The Routing Core
@@ -57,6 +59,7 @@ edito/
 ## 🌟 Premium Design Rules
 
 Every element inside Stedtio follows these guidelines to remain visually spectacular:
+
 - **Harmonic dark palettes** instead of plain browser black and white.
 - **Smooth transitions and micro-animations** to make the screen feel alive.
 - **Glassmorphism & Radial glows** to simulate depth.

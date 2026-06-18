@@ -15,6 +15,7 @@ interface Caption {
   text: string;
   start: number;
   end: number;
+  words?: { word: string; start: number; end: number }[];
 }
 
 interface FillerWord {
@@ -39,6 +40,7 @@ interface Chunk {
   transcript: string;
   editManifest: EditManifest;
   userKeep: boolean;
+  words?: { word: string; start: number; end: number }[];
 }
 
 interface Project {
@@ -522,6 +524,53 @@ function TimelineReview({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
 
+  // AI Prompt State
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiDiff, setAiDiff] = useState<string[]>([]);
+
+  // Debounced auto-save to DB
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const saveChunksToBackend = (updatedChunks: Chunk[]) => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        const keepRanges: [number, number][] = [];
+        const captions: Caption[] = [];
+        let totalDuration = 0;
+        for (const chunk of updatedChunks) {
+          if (chunk.userKeep !== false) {
+            if (chunk.editManifest?.keepGlobal) {
+              keepRanges.push(...chunk.editManifest.keepGlobal);
+            }
+            if (chunk.editManifest?.captions) {
+              captions.push(...chunk.editManifest.captions);
+            }
+          }
+          totalDuration = Math.max(totalDuration, chunk.endTime);
+        }
+
+        await fetch(`${API}/api/video/${project._id}/manifest`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`,
+          },
+          body: JSON.stringify({
+            chunks: updatedChunks,
+            globalManifest: {
+              totalDuration,
+              keepRanges,
+              captions,
+            },
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to auto-save manifest:", err);
+      }
+    }, 1000);
+  };
+
   // Drag resizing handlers
   const dragStartRef = useRef<{ x: number; y: number; size: number } | null>(null);
   const handleResizeEndRef = useRef<(() => void) | null>(null);
@@ -567,10 +616,19 @@ function TimelineReview({
   const totalDuration = project.globalManifest?.totalDuration || chunks.reduce((s, c) => Math.max(s, c.endTime), 0);
   const keptCount = chunks.filter(c => c.userKeep !== false).length;
 
-  // Find active caption based on currentTime
+  // Find active caption based on currentTime, filtering out trimmed ranges
   const activeCaption = chunks
     .filter(c => c.userKeep !== false)
-    .flatMap(c => c.editManifest?.captions || [])
+    .flatMap(c => {
+      const keepRanges = c.editManifest?.keep || [];
+      const captions = c.editManifest?.captions || [];
+      if (keepRanges.length === 0) return captions;
+      return captions.filter(cap => {
+        const relStart = cap.start - c.startTime;
+        const relEnd = cap.end - c.startTime;
+        return keepRanges.some(([s, e]) => relStart <= e && relEnd >= s);
+      });
+    })
     .find(cap => currentTime >= cap.start && currentTime <= cap.end);
 
   const chunksRef = useRef(chunks);
@@ -578,7 +636,7 @@ function TimelineReview({
     chunksRef.current = chunks;
   }, [chunks]);
 
-  // Sync video element
+  // Sync video element with playhead-skipping
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -587,22 +645,45 @@ function TimelineReview({
       const time = video.currentTime;
       setCurrentTime(time);
 
-      // Find if current time is inside a cut chunk
       const activeChunks = chunksRef.current;
       const currentChunkIdx = activeChunks.findIndex(c => time >= c.startTime && time < c.endTime);
 
       if (currentChunkIdx >= 0) {
         const currentChunk = activeChunks[currentChunkIdx];
         if (currentChunk.userKeep === false) {
-          // Find the next kept chunk
           const nextKeptChunk = activeChunks.slice(currentChunkIdx + 1).find(c => c.userKeep !== false);
           if (nextKeptChunk) {
-            video.currentTime = nextKeptChunk.startTime;
-            setCurrentTime(nextKeptChunk.startTime);
+            const nextRanges = nextKeptChunk.editManifest?.keep || [];
+            const nextStartOffset = nextRanges.length > 0 ? nextRanges[0][0] : 0;
+            video.currentTime = nextKeptChunk.startTime + nextStartOffset;
+            setCurrentTime(nextKeptChunk.startTime + nextStartOffset);
           } else {
-            // No more kept chunks, pause video
             video.pause();
             setVideoPlay(false);
+          }
+        } else {
+          const keepRanges = currentChunk.editManifest?.keep || [];
+          if (keepRanges.length > 0) {
+            const relTime = time - currentChunk.startTime;
+            const currentRange = keepRanges.find(([s, e]) => relTime >= s && relTime <= e);
+            if (!currentRange) {
+              const nextRange = keepRanges.find(([s, e]) => s > relTime);
+              if (nextRange) {
+                video.currentTime = currentChunk.startTime + nextRange[0];
+                setCurrentTime(currentChunk.startTime + nextRange[0]);
+              } else {
+                const nextKeptChunk = activeChunks.slice(currentChunkIdx + 1).find(c => c.userKeep !== false);
+                if (nextKeptChunk) {
+                  const nextRanges = nextKeptChunk.editManifest?.keep || [];
+                  const nextStartOffset = nextRanges.length > 0 ? nextRanges[0][0] : 0;
+                  video.currentTime = nextKeptChunk.startTime + nextStartOffset;
+                  setCurrentTime(nextKeptChunk.startTime + nextStartOffset);
+                } else {
+                  video.pause();
+                  setVideoPlay(false);
+                }
+              }
+            }
           }
         }
       }
@@ -634,16 +715,204 @@ function TimelineReview({
   }, [currentTime, chunks, selectedChunk]);
 
   const toggleChunk = (idx: number) => {
-    setChunks(prev => prev.map((c, i) => i === idx ? { ...c, userKeep: !c.userKeep } : c));
+    const updated = chunks.map((c, i) => i === idx ? { ...c, userKeep: !c.userKeep } : c);
+    setChunks(updated);
+    saveChunksToBackend(updated);
   };
 
   const editCaption = (chunkIdx: number, capIdx: number, text: string) => {
-    setChunks(prev => prev.map((c, i) => {
+    const updated = chunks.map((c, i) => {
       if (i !== chunkIdx) return c;
       const captions = [...(c.editManifest?.captions || [])];
       captions[capIdx] = { ...captions[capIdx], text };
       return { ...c, editManifest: { ...c.editManifest, captions } };
+    });
+    setChunks(updated);
+    saveChunksToBackend(updated);
+  };
+
+  const handleTrimChange = (startVal: number, endVal: number) => {
+    if (selectedChunk === null) return;
+    const updated = chunks.map((c, i) => {
+      if (i !== selectedChunk) return c;
+      const keep = [[startVal, endVal]] as [number, number][];
+      const keepGlobal = keep.map(([s, e]) => [c.startTime + s, c.startTime + e]) as [number, number][];
+      return {
+        ...c,
+        editManifest: {
+          ...c.editManifest,
+          keep,
+          keepGlobal
+        }
+      };
+    });
+    setChunks(updated);
+    saveChunksToBackend(updated);
+  };
+
+  const handleSplitChunk = () => {
+    if (selectedChunk === null) return;
+    const chunk = chunks[selectedChunk];
+    const relTime = currentTime - chunk.startTime;
+    if (relTime <= 0.5 || relTime >= chunk.duration - 0.5) {
+      alert("Cannot split so close to the boundaries of the segment.");
+      return;
+    }
+
+    const chunkA: Chunk = {
+      ...chunk,
+      index: selectedChunk,
+      endTime: chunk.startTime + relTime,
+      duration: relTime,
+      userKeep: chunk.userKeep
+    };
+
+    const chunkB: Chunk = {
+      ...chunk,
+      index: selectedChunk + 1,
+      startTime: chunk.startTime + relTime,
+      duration: chunk.duration - relTime,
+      userKeep: chunk.userKeep
+    };
+
+    const wordsA = (chunk.words || []).filter((w: { word: string; start: number; end: number }) => w.start < relTime);
+    const wordsB = (chunk.words || []).filter((w: { word: string; start: number; end: number }) => w.start >= relTime).map((w: { word: string; start: number; end: number }) => ({
+      ...w,
+      start: w.start - relTime,
+      end: w.end - relTime
     }));
+
+    chunkA.words = wordsA;
+    chunkB.words = wordsB;
+    chunkA.transcript = wordsA.map((w: { word: string }) => w.word).join(" ");
+    chunkB.transcript = wordsB.map((w: { word: string }) => w.word).join(" ");
+
+    const keepA: [number, number][] = [];
+    const keepB: [number, number][] = [];
+    const keep = chunk.editManifest?.keep || [[0, chunk.duration]];
+    for (const [s, e] of keep) {
+      if (e <= relTime) {
+        keepA.push([s, e]);
+      } else if (s >= relTime) {
+        keepB.push([s - relTime, e - relTime]);
+      } else {
+        keepA.push([s, relTime]);
+        keepB.push([0, e - relTime]);
+      }
+    }
+
+    const captionsA: Caption[] = [];
+    const captionsB: Caption[] = [];
+    const captions = chunk.editManifest?.captions || [];
+    for (const cap of captions) {
+      const capStartRel = cap.start - chunk.startTime;
+      const capEndRel = cap.end - chunk.startTime;
+      if (capEndRel <= relTime) {
+        captionsA.push(cap);
+      } else if (capStartRel >= relTime) {
+        captionsB.push({
+          ...cap,
+          start: cap.start,
+          end: cap.end
+        });
+      } else {
+        captionsA.push({ ...cap, end: chunk.startTime + relTime });
+        captionsB.push({ ...cap, start: chunk.startTime + relTime });
+      }
+    }
+
+    chunkA.editManifest = {
+      ...chunk.editManifest,
+      keep: keepA,
+      keepGlobal: keepA.map(([s, e]) => [chunkA.startTime + s, chunkA.startTime + e]),
+      captions: captionsA.map(c => ({
+        ...c,
+        start: Math.max(chunkA.startTime, c.start),
+        end: Math.min(chunkA.endTime, c.end),
+      })),
+    };
+
+    chunkB.editManifest = {
+      ...chunk.editManifest,
+      keep: keepB,
+      keepGlobal: keepB.map(([s, e]) => [chunkB.startTime + s, chunkB.startTime + e]),
+      captions: captionsB.map(c => ({
+        ...c,
+        start: Math.max(chunkB.startTime, c.start),
+        end: Math.min(chunkB.endTime, c.end),
+      })),
+    };
+
+    const nextChunks = [...chunks];
+    nextChunks.splice(selectedChunk, 1, chunkA, chunkB);
+    const updated = nextChunks.map((c, i) => ({ ...c, index: i }));
+
+    setChunks(updated);
+    saveChunksToBackend(updated);
+    setSelectedChunk(selectedChunk + 1);
+  };
+
+  const handleMoveChunk = (direction: "earlier" | "later") => {
+    if (selectedChunk === null) return;
+    const targetIdx = direction === "earlier" ? selectedChunk - 1 : selectedChunk + 1;
+    if (targetIdx < 0 || targetIdx >= chunks.length) return;
+
+    const nextChunks = [...chunks];
+    const temp = nextChunks[selectedChunk];
+    nextChunks[selectedChunk] = nextChunks[targetIdx];
+    nextChunks[targetIdx] = temp;
+
+    const updated = nextChunks.map((c, i) => ({ ...c, index: i }));
+    setChunks(updated);
+    saveChunksToBackend(updated);
+    setSelectedChunk(targetIdx);
+  };
+
+  const handleAiPromptSubmit = async () => {
+    if (!aiPrompt.trim()) return;
+    setAiLoading(true);
+    setAiDiff([]);
+    try {
+      const res = await fetch(`${API}/api/video/${project._id}/prompt-edit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ prompt: aiPrompt, chunks }),
+      });
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+      const data = await res.json();
+      
+      // Calculate diff to show what changed
+      const diff: string[] = [];
+      data.chunks.forEach((nc: Chunk) => {
+        const oc = chunks.find(c => c.index === nc.index);
+        if (oc) {
+          if (oc.userKeep !== nc.userKeep) {
+            diff.push(`Chunk ${nc.index + 1}: ${nc.userKeep ? "Restored" : "Cut"}`);
+          }
+          const okKeep = oc.editManifest?.keep || [];
+          const nkKeep = nc.editManifest?.keep || [];
+          if (JSON.stringify(okKeep) !== JSON.stringify(nkKeep)) {
+            diff.push(`Chunk ${nc.index + 1}: Trim adjusted`);
+          }
+        }
+      });
+      if (diff.length === 0) {
+        diff.push("AI applied editing operations successfully.");
+      }
+      setAiDiff(diff);
+      setChunks(data.chunks);
+      setAiPrompt("");
+    } catch (err: any) {
+      console.error("AI prompt edit failed:", err);
+      alert(`AI Edit Failed: ${err.message || err}`);
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const seekToChunk = (chunk: Chunk) => {
@@ -661,7 +930,13 @@ function TimelineReview({
 
   const keptDuration = chunks
     .filter(c => c.userKeep !== false)
-    .reduce((s, c) => s + c.duration, 0);
+    .reduce((s, c) => {
+      const keep = c.editManifest?.keep || [];
+      if (keep.length > 0) {
+        return s + keep.reduce((sum, [startVal, endVal]) => sum + (endVal - startVal), 0);
+      }
+      return s + c.duration;
+    }, 0);
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -887,48 +1162,187 @@ function TimelineReview({
           </div>
 
           {/* Selected chunk info */}
-          {selectedChunk !== null && chunks[selectedChunk] && (
-            <div className="bg-surface border border-border rounded-xl p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-bold text-text-primary">Chunk {selectedChunk + 1}</p>
-                  <p className="text-[10px] font-mono text-text-muted mt-0.5">
-                    {chunks[selectedChunk].startTime.toFixed(1)}s – {chunks[selectedChunk].endTime.toFixed(1)}s
-                    · {chunks[selectedChunk].duration.toFixed(1)}s long
-                    · Score: {chunks[selectedChunk].editManifest?.score?.toFixed(1) ?? "N/A"}
-                  </p>
-                  {(chunks[selectedChunk].editManifest?.highlights?.length ?? 0) > 0 && (
-                    <p className="text-[10px] text-yellow-400 mt-1">
-                      ★ {chunks[selectedChunk].editManifest.highlights[0]}
+          {selectedChunk !== null && chunks[selectedChunk] && (() => {
+            const chunk = chunks[selectedChunk];
+            const currentKeepRange = chunk.editManifest?.keep?.[0] || [0, chunk.duration];
+            const [trimStart, trimEnd] = currentKeepRange;
+
+            return (
+              <div className="bg-surface border border-border rounded-xl p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold text-text-primary">Chunk {selectedChunk + 1}</p>
+                    <p className="text-[10px] font-mono text-text-muted mt-0.5">
+                      {chunk.startTime.toFixed(1)}s – {chunk.endTime.toFixed(1)}s
+                      · {chunk.duration.toFixed(1)}s long
+                      · Score: {chunk.editManifest?.score?.toFixed(1) ?? "N/A"}
                     </p>
-                  )}
+                    {(chunk.editManifest?.highlights?.length ?? 0) > 0 && (
+                      <p className="text-[10px] text-yellow-400 mt-1">
+                        ★ {chunk.editManifest.highlights[0]}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => toggleChunk(selectedChunk)}
+                    className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
+                      chunk.userKeep !== false
+                        ? "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
+                        : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+                    }`}
+                  >
+                    {chunk.userKeep !== false ? (
+                      <><XCircle className="w-3.5 h-3.5" /> Cut this</>
+                    ) : (
+                      <><CheckCircle className="w-3.5 h-3.5" /> Keep this</>
+                    )}
+                  </button>
                 </div>
-                <button
-                  onClick={() => toggleChunk(selectedChunk)}
-                  className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
-                    chunks[selectedChunk].userKeep !== false
-                      ? "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
-                      : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
-                  }`}
-                >
-                  {chunks[selectedChunk].userKeep !== false ? (
-                    <><XCircle className="w-3.5 h-3.5" /> Cut this</>
-                  ) : (
-                    <><CheckCircle className="w-3.5 h-3.5" /> Keep this</>
-                  )}
-                </button>
+
+                {chunk.transcript && (
+                  <p className="text-[11px] text-text-muted mt-3 font-mono leading-relaxed border-t border-border pt-3">
+                    &quot;{chunk.transcript}&quot;
+                  </p>
+                )}
+
+                {/* Manual Trimming inputs */}
+                <div className="flex gap-4 items-center mt-3 border-t border-border pt-3">
+                  <div className="flex-1">
+                    <span className="text-[9px] font-mono font-bold text-text-muted uppercase block mb-1">
+                      Trim Start (sec)
+                    </span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={trimEnd}
+                      step={0.1}
+                      value={trimStart}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0;
+                        handleTrimChange(Math.max(0, Math.min(val, trimEnd)), trimEnd);
+                      }}
+                      className="w-full bg-background border border-border rounded-lg px-2.5 py-1.5 text-xs text-text-primary focus:outline-none focus:border-accent/50 font-mono"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-[9px] font-mono font-bold text-text-muted uppercase block mb-1">
+                      Trim End (sec)
+                    </span>
+                    <input
+                      type="number"
+                      min={trimStart}
+                      max={chunk.duration}
+                      step={0.1}
+                      value={trimEnd}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || chunk.duration;
+                        handleTrimChange(trimStart, Math.max(trimStart, Math.min(val, chunk.duration)));
+                      }}
+                      className="w-full bg-background border border-border rounded-lg px-2.5 py-1.5 text-xs text-text-primary focus:outline-none focus:border-accent/50 font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Split and Reordering buttons */}
+                <div className="flex gap-2 items-center mt-3">
+                  <button
+                    onClick={handleSplitChunk}
+                    disabled={currentTime <= chunk.startTime + 0.5 || currentTime >= chunk.endTime - 0.5}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-border hover:bg-border/40 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-all text-text-primary"
+                    title={currentTime <= chunk.startTime + 0.5 || currentTime >= chunk.endTime - 0.5 ? "Move playhead to middle of clip to split" : "Split segment at playhead"}
+                  >
+                    ✂️ Split Clip
+                  </button>
+                  <button
+                    onClick={() => handleMoveChunk("earlier")}
+                    disabled={selectedChunk === 0}
+                    className="flex items-center justify-center px-3 py-1.5 rounded-lg border border-border hover:bg-border/40 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-all text-[10px] font-bold text-text-primary"
+                    title="Move segment earlier"
+                  >
+                    Move Up
+                  </button>
+                  <button
+                    onClick={() => handleMoveChunk("later")}
+                    disabled={selectedChunk === chunks.length - 1}
+                    className="flex items-center justify-center px-3 py-1.5 rounded-lg border border-border hover:bg-border/40 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-all text-[10px] font-bold text-text-primary"
+                    title="Move segment later"
+                  >
+                    Move Down
+                  </button>
+                </div>
               </div>
-              {chunks[selectedChunk].transcript && (
-                <p className="text-[11px] text-text-muted mt-3 font-mono leading-relaxed border-t border-border pt-3">
-                  &quot;{chunks[selectedChunk].transcript}&quot;
-                </p>
-              )}
-            </div>
-          )}
+            );
+          })()}
         </div>
 
-        {/* Right: Timeline chunks */}
-        <div className="lg:w-[35%] flex flex-col min-h-0">
+        {/* Right: Timeline chunks & AI Prompt Sidebar */}
+        <div className="lg:w-[35%] flex flex-col min-h-0 border-l border-border bg-surface/10">
+          
+          {/* AI Prompt Editing Panel */}
+          <div className="p-4 border-b border-border bg-surface/30">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-text-muted uppercase block mb-2">
+              ✨ Edit with AI Prompt
+            </span>
+            <div className="flex gap-2">
+              <textarea
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Ask AI to edit this video... e.g. 'Cut first 5 seconds', 'Keep only React parts'"
+                rows={2}
+                className="flex-1 bg-background/60 border border-border rounded-xl px-3 py-2 text-xs text-text-primary resize-none focus:outline-none focus:border-accent/50 font-body placeholder:text-text-muted/50"
+              />
+              <button
+                onClick={handleAiPromptSubmit}
+                disabled={aiLoading || !aiPrompt.trim()}
+                className="px-4 py-2 bg-accent text-background font-bold text-xs rounded-xl hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all flex flex-col items-center justify-center min-w-[70px]"
+              >
+                {aiLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <span>Apply</span>
+                )}
+              </button>
+            </div>
+            
+            {/* Suggestions Chips */}
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {[
+                "Cut first 5 seconds",
+                "Remove filler words",
+                "Keep only React parts",
+                "Clean transcript"
+              ].map(chip => (
+                <button
+                  key={chip}
+                  onClick={() => setAiPrompt(chip)}
+                  className="text-[9px] font-mono bg-background hover:bg-border/40 border border-border text-text-muted px-2 py-0.5 rounded transition-all cursor-pointer"
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+
+            {/* AI Diff/Results Alert */}
+            {aiDiff.length > 0 && (
+              <div className="mt-3 bg-accent/5 border border-accent/20 rounded-xl p-3">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-mono font-bold text-accent">Last AI Edit Changes:</span>
+                  <button 
+                    onClick={() => setAiDiff([])}
+                    className="text-[9px] font-mono text-text-muted hover:text-text-primary cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                </div>
+                <ul className="list-disc pl-4 space-y-1">
+                  {aiDiff.map((d, i) => (
+                    <li key={i} className="text-[10px] font-mono text-text-muted">{d}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
           <div className="px-5 py-3 border-b border-border">
             <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
               Timeline · {chunks.length} segments · Click to select, toggle to keep/cut
