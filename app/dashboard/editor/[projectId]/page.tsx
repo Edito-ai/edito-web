@@ -41,6 +41,7 @@ interface Chunk {
   editManifest: EditManifest;
   userKeep: boolean;
   words?: { word: string; start: number; end: number }[];
+  yoloLabels?: string[];
 }
 
 interface Project {
@@ -58,15 +59,18 @@ interface Project {
   captionStyle?: "kinetic" | "karaoke" | "minimal";
   captionSize?: "small" | "medium" | "large" | "xlarge";
   captionFontSize?: number;
+  aiEnriched?: boolean;
 }
 
 interface SSEEvent {
-  status: string;
-  progress: number;
-  message: string;
+  status?: string;
+  progress?: number;
+  message?: string;
   finalKey?: string;
   captionsKey?: string;
   finalCaptions?: Caption[];
+  type?: string;
+  chunk?: Chunk;
 }
 
 const API = "http://localhost:5000";
@@ -89,29 +93,7 @@ function stageIndex(status: string) {
   return map[status] ?? 0;
 }
 
-function getFontSizeClass(style: "kinetic" | "karaoke" | "minimal", size: "small" | "medium" | "large" | "xlarge") {
-  const mapping = {
-    kinetic: {
-      small: "text-xs md:text-sm",
-      medium: "text-sm md:text-lg",
-      large: "text-lg md:text-2xl",
-      xlarge: "text-2xl md:text-4xl"
-    },
-    karaoke: {
-      small: "text-xs md:text-sm",
-      medium: "text-sm md:text-lg",
-      large: "text-lg md:text-2xl",
-      xlarge: "text-2xl md:text-4xl"
-    },
-    minimal: {
-      small: "text-[10px] md:text-xs",
-      medium: "text-xs md:text-sm",
-      large: "text-sm md:text-base",
-      xlarge: "text-base md:text-lg"
-    }
-  };
-  return mapping[style][size];
-}
+
 
 // ─── Processing View ──────────────────────────────────────────────────────────
 function ProcessingView({ sse, projectName, onCancel, isCancelling }: { sse: SSEEvent | null; projectName: string; onCancel: () => void; isCancelling: boolean }) {
@@ -223,7 +205,6 @@ function RenderDoneView({ project }: { project: Project }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const captionStyle = project.captionStyle || "kinetic";
-  const captionSize = project.captionSize || "medium";
   const captionFontSize = project.captionFontSize || 24;
   const finalCaptions = project.finalCaptions || [];
 
@@ -402,7 +383,7 @@ function ChunkBlock({
   const [expanded, setExpanded] = useState(false);
   const widthPct = (chunk.duration / totalDuration) * 100;
   const score = chunk.editManifest?.score ?? 5;
-  const scoreColor = score >= 8 ? "text-emerald-400" : score >= 6 ? "text-yellow-400" : "text-red-400";
+  const scoreColor = score >= 7 ? "text-emerald-400" : score >= 4 ? "text-yellow-400" : "text-red-400";
 
   return (
     <div
@@ -437,8 +418,8 @@ function ChunkBlock({
 
         {/* Transcript snippet */}
         {chunk.transcript && (
-          <p className="text-[11px] text-text-muted mt-2 leading-tight line-clamp-2">
-            &quot;{chunk.transcript.substring(0, 80)}{chunk.transcript.length > 80 ? "…" : ""}&quot;
+          <p className="text-[11px] text-text-muted mt-1.5 leading-tight">
+            &quot;...{chunk.transcript.substring(0, 60)}{chunk.transcript.length > 60 ? "..." : ""}&quot;
           </p>
         )}
 
@@ -448,6 +429,17 @@ function ChunkBlock({
             {chunk.editManifest.fillerWords.slice(0, 4).map((fw, i) => (
               <span key={i} className="text-[9px] font-mono bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 px-1 rounded">
                 {fw.word}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* YOLO Visual Tags */}
+        {chunk.yoloLabels && chunk.yoloLabels.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {chunk.yoloLabels.map((tag, i) => (
+              <span key={i} className="text-[9px] font-mono bg-accent/10 text-accent px-2 py-0.5 rounded-full font-medium">
+                {tag}
               </span>
             ))}
           </div>
@@ -513,13 +505,35 @@ function TimelineReview({
   isRendering: boolean;
 }) {
   const [chunks, setChunks] = useState<Chunk[]>(project.chunks || []);
+  const [prevProjectChunks, setPrevProjectChunks] = useState<Chunk[]>(project.chunks || []);
+
+  if (project.chunks !== prevProjectChunks) {
+    setPrevProjectChunks(project.chunks);
+    setChunks((prev) => {
+      return project.chunks.map((pc, idx) => {
+        const prevChunk = prev[idx];
+        if (!prevChunk) return pc;
+        return {
+          ...prevChunk,
+          yoloLabels: pc.yoloLabels || prevChunk.yoloLabels,
+          editManifest: {
+            ...prevChunk.editManifest,
+            ...pc.editManifest,
+            score: pc.editManifest?.score ?? prevChunk.editManifest?.score,
+            keep: pc.editManifest?.keep || prevChunk.editManifest?.keep,
+            keepGlobal: pc.editManifest?.keepGlobal || prevChunk.editManifest?.keepGlobal,
+          },
+          userKeep: pc.userKeep !== undefined ? pc.userKeep : prevChunk.userKeep,
+        };
+      });
+    });
+  }
 
   const [selectedChunk, setSelectedChunk] = useState<number | null>(null);
   const [videoPlay, setVideoPlay] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [videoDuration, setVideoDuration] = useState(0);
-  const [captionStyle, setCaptionStyle] = useState<"kinetic" | "karaoke" | "minimal">(project.captionStyle || "kinetic");
-  const [captionSize, setCaptionSize] = useState<"small" | "medium" | "large" | "xlarge">(project.captionSize || "medium");
+  const [captionStyle] = useState<"kinetic" | "karaoke" | "minimal">(project.captionStyle || "kinetic");
+  const [captionSize] = useState<"small" | "medium" | "large" | "xlarge">(project.captionSize || "medium");
   const [captionFontSize, setCaptionFontSize] = useState<number>(project.captionFontSize || 24);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
@@ -590,7 +604,9 @@ function TimelineReview({
     }
   }, [handleResizeMove]);
 
-  handleResizeEndRef.current = handleResizeEnd;
+  useEffect(() => {
+    handleResizeEndRef.current = handleResizeEnd;
+  }, [handleResizeEnd]);
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -665,9 +681,9 @@ function TimelineReview({
           const keepRanges = currentChunk.editManifest?.keep || [];
           if (keepRanges.length > 0) {
             const relTime = time - currentChunk.startTime;
-            const currentRange = keepRanges.find(([s, e]) => relTime >= s && relTime <= e);
-            if (!currentRange) {
-              const nextRange = keepRanges.find(([s, e]) => s > relTime);
+             const currentRange = keepRanges.find(([s, e]) => relTime >= s && relTime <= e);
+             if (!currentRange) {
+               const nextRange = keepRanges.find(([s]) => s > relTime);
               if (nextRange) {
                 video.currentTime = currentChunk.startTime + nextRange[0];
                 setCurrentTime(currentChunk.startTime + nextRange[0]);
@@ -688,12 +704,10 @@ function TimelineReview({
         }
       }
     };
-    const onDur = () => setVideoDuration(video.duration || 0);
     const onEnd = () => setVideoPlay(false);
     video.addEventListener("timeupdate", onTime);
-    video.addEventListener("durationchange", onDur);
     video.addEventListener("ended", onEnd);
-    return () => { video.removeEventListener("timeupdate", onTime); video.removeEventListener("durationchange", onDur); video.removeEventListener("ended", onEnd); };
+    return () => { video.removeEventListener("timeupdate", onTime); video.removeEventListener("ended", onEnd); };
   }, []);
 
   useEffect(() => {
@@ -907,9 +921,10 @@ function TimelineReview({
       setAiDiff(diff);
       setChunks(data.chunks);
       setAiPrompt("");
-    } catch (err: any) {
-      console.error("AI prompt edit failed:", err);
-      alert(`AI Edit Failed: ${err.message || err}`);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.error("AI prompt edit failed:", error);
+      alert(`AI Edit Failed: ${error.message}`);
     } finally {
       setAiLoading(false);
     }
@@ -938,24 +953,121 @@ function TimelineReview({
       return s + c.duration;
     }, 0);
 
+  const getEditedTime = (rawTime: number): number => {
+    let elapsed = 0;
+    for (const chunk of chunks) {
+      if (rawTime < chunk.startTime) {
+        break;
+      }
+      const keepRanges = chunk.editManifest?.keep || [];
+      const isKept = chunk.userKeep !== false;
+      
+      if (rawTime >= chunk.startTime && rawTime < chunk.endTime) {
+        if (!isKept) {
+          return elapsed;
+        }
+        const relTime = rawTime - chunk.startTime;
+        if (keepRanges.length === 0) {
+          return elapsed + relTime;
+        }
+        let chunkElapsed = 0;
+        for (const [s, e] of keepRanges) {
+          if (relTime >= s && relTime <= e) {
+            chunkElapsed += (relTime - s);
+            break;
+          } else if (relTime > e) {
+            chunkElapsed += (e - s);
+          } else if (relTime < s) {
+            break;
+          }
+        }
+        return elapsed + chunkElapsed;
+      }
+
+      if (isKept) {
+        if (keepRanges.length === 0) {
+          elapsed += chunk.duration;
+        } else {
+          elapsed += keepRanges.reduce((sum, [s, e]) => sum + (e - s), 0);
+        }
+      }
+    }
+    return elapsed;
+  };
+
+  const getRawTime = (editedTime: number): number => {
+    let elapsed = 0;
+    for (const chunk of chunks) {
+      const isKept = chunk.userKeep !== false;
+      if (!isKept) continue;
+
+      const keepRanges = chunk.editManifest?.keep || [];
+      const chunkKeptDur = keepRanges.length === 0 
+        ? chunk.duration 
+        : keepRanges.reduce((sum, [s, e]) => sum + (e - s), 0);
+
+      if (editedTime >= elapsed && editedTime <= elapsed + chunkKeptDur) {
+        const targetInChunk = editedTime - elapsed;
+        if (keepRanges.length === 0) {
+          return chunk.startTime + targetInChunk;
+        }
+        let subElapsed = 0;
+        for (const [s, e] of keepRanges) {
+          const rangeDur = e - s;
+          if (targetInChunk >= subElapsed && targetInChunk <= subElapsed + rangeDur) {
+            return chunk.startTime + s + (targetInChunk - subElapsed);
+          }
+          subElapsed += rangeDur;
+        }
+        return chunk.startTime + chunk.duration;
+      }
+      
+      elapsed += chunkKeptDur;
+    }
+    return chunks[chunks.length - 1]?.endTime || 0;
+  };
+
+  const timeSaved = Math.max(0, Math.round(totalDuration - keptDuration));
+
+  const cutAllLowScore = () => {
+    const updated = chunks.map(c => {
+      const score = c.editManifest?.score ?? 5;
+      if (score < 5) {
+        return { ...c, userKeep: false };
+      }
+      return c;
+    });
+    setChunks(updated);
+    saveChunksToBackend(updated);
+  };
+
+  const keepAll = () => {
+    const updated = chunks.map(c => ({ ...c, userKeep: true }));
+    setChunks(updated);
+    saveChunksToBackend(updated);
+  };
+
+  const resetToAiSuggestions = () => {
+    const updated = chunks.map(c => {
+      const score = c.editManifest?.score ?? 5;
+      return { ...c, userKeep: score >= 5 };
+    });
+    setChunks(updated);
+    saveChunksToBackend(updated);
+  };
+
   return (
     <div className="flex-1 flex flex-col min-h-0">
       {/* Top stats bar */}
       <div className="flex items-center gap-6 px-6 py-3 border-b border-border bg-surface/50 flex-wrap">
         <div className="flex items-center gap-2">
           <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="text-xs font-mono text-text-muted">{keptCount}/{chunks.length} segments kept</span>
+          <span className="text-xs font-mono text-text-muted">Segments: {keptCount}/{chunks.length} kept</span>
         </div>
         <div className="flex items-center gap-2">
           <Scissors className="w-3.5 h-3.5 text-orange-400" />
           <span className="text-xs font-mono text-text-muted">
-            {formatTime(keptDuration)} / {formatTime(totalDuration)} final duration
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Star className="w-3.5 h-3.5 text-yellow-400" />
-          <span className="text-xs font-mono text-text-muted">
-            {chunks.filter(c => (c.editManifest?.highlights?.length ?? 0) > 0).length} highlights
+            Original: {formatTime(totalDuration)} → Final: {formatTime(keptDuration)} | Saved: {timeSaved}s
           </span>
         </div>
 
@@ -974,6 +1086,20 @@ function TimelineReview({
         </div>
       </div>
 
+      {/* Background AI Enrichment banner */}
+      {!project.aiEnriched && (
+        <div className="w-full bg-accent/10 border-b border-accent/20 text-accent text-xs font-mono py-2 px-6 text-center flex items-center justify-center gap-2">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" /> AI is refining decisions in background...
+        </div>
+      )}
+
+      {/* Time Saved banner */}
+      {timeSaved > 0 && (
+        <div className="w-full bg-emerald-500/10 border-b border-emerald-500/20 text-emerald-400 text-xs font-mono py-2 px-6 text-center">
+          ✂️ AI removed {timeSaved}s of dead air and filler — saving you hours of manual editing
+        </div>
+      )}
+
       {/* Main layout: video preview + chunks */}
       <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
         {/* Left: Video Preview */}
@@ -987,77 +1113,83 @@ function TimelineReview({
             />
 
             {/* Subtitle Overlay in Screen */}
-            {activeCaption && (
-              <div className="absolute bottom-12 left-6 right-6 z-20 flex justify-center text-center pointer-events-none">
-                <div className="relative pointer-events-auto inline-block group/resize select-none">
-                  {captionStyle === "kinetic" && (
-                    <span
-                      style={{ fontSize: `${captionFontSize}px`, lineHeight: "1.2" }}
-                      className="font-black uppercase tracking-wide bg-accent text-background px-3.5 py-1.5 rounded-lg shadow-xl shadow-black/60 -rotate-1 inline-block max-w-[90%]"
-                    >
-                      {activeCaption.text}
-                    </span>
-                  )}
-                  {captionStyle === "karaoke" && (
-                    <div
-                      style={{ fontSize: `${captionFontSize}px`, lineHeight: "1.2" }}
-                      className="font-bold bg-surface/90 text-text-primary px-4 py-2 rounded-xl border border-border shadow-xl flex flex-wrap justify-center gap-x-1.5 max-w-[90%] font-display"
-                    >
-                      {activeCaption.text.split(" ").map((word, wIdx) => {
-                        const duration = activeCaption.end - activeCaption.start;
-                        const progress = (currentTime - activeCaption.start) / duration;
-                        const words = activeCaption.text.split(" ");
-                        const activeWordIndex = Math.min(
-                          Math.floor(progress * words.length),
-                          words.length - 1
-                        );
-                        const isWordActive = wIdx === activeWordIndex;
-                        return (
-                          <span
-                            key={wIdx}
-                            className={`transition-all duration-100 ${
-                              isWordActive
-                                ? "text-accent scale-110 font-extrabold"
-                                : "opacity-80"
-                            }`}
-                          >
-                            {word}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {captionStyle === "minimal" && (
-                    <span
-                      style={{ fontSize: `${captionFontSize}px`, lineHeight: "1.2" }}
-                      className="font-medium text-text-primary px-3 py-1 bg-black/40 backdrop-blur-sm rounded-md max-w-[85%] border border-border/30 inline-block"
-                    >
-                      {activeCaption.text}
-                    </span>
-                  )}
+            {activeCaption && (() => {
+              const cap = activeCaption;
+              return (
+                <div className="absolute bottom-12 left-6 right-6 z-20 flex justify-center text-center pointer-events-none">
+                  <div className="relative pointer-events-auto inline-block group/resize select-none">
+                    {captionStyle === "kinetic" && (
+                      <span
+                        style={{ fontSize: `${captionFontSize}px`, lineHeight: "1.2" }}
+                        className="font-black uppercase tracking-wide bg-accent text-background px-3.5 py-1.5 rounded-lg shadow-xl shadow-black/60 -rotate-1 inline-block max-w-[90%]"
+                      >
+                        {cap.text}
+                      </span>
+                    )}
+                    {captionStyle === "karaoke" && (
+                      <div
+                        style={{ fontSize: `${captionFontSize}px`, lineHeight: "1.2" }}
+                        className="font-bold bg-surface/90 text-text-primary px-4 py-2 rounded-xl border border-border shadow-xl flex flex-wrap justify-center gap-x-1.5 max-w-[90%] font-display"
+                      >
+                        {cap.text.split(" ").map((word, wIdx) => {
+                          const duration = cap.end - cap.start;
+                          const progress = (currentTime - cap.start) / duration;
+                          const words = cap.text.split(" ");
+                          const activeWordIndex = Math.min(
+                            Math.floor(progress * words.length),
+                            words.length - 1
+                          );
+                          const isWordActive = wIdx === activeWordIndex;
+                          return (
+                            <span
+                              key={wIdx}
+                              className={`transition-all duration-100 ${
+                                isWordActive
+                                  ? "text-accent scale-110 font-extrabold"
+                                  : "opacity-80"
+                              }`}
+                            >
+                              {word}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {captionStyle === "minimal" && (
+                      <span
+                        style={{ fontSize: `${captionFontSize}px`, lineHeight: "1.2" }}
+                        className="font-medium text-text-primary px-3 py-1 bg-black/40 backdrop-blur-sm rounded-md max-w-[85%] border border-border/30 inline-block"
+                      >
+                        {cap.text}
+                      </span>
+                    )}
 
-                  {/* Resize Handle */}
-                  <div
-                    onMouseDown={handleResizeStart}
-                    className="absolute -bottom-2 -right-2 w-5 h-5 flex items-center justify-center bg-accent border-2 border-background rounded-full shadow-lg cursor-se-resize pointer-events-auto z-30 transition-all hover:scale-110 active:scale-95"
-                    title="Drag to resize text"
-                  >
-                    <div className="w-1.5 h-1.5 bg-background rounded-full" />
+                    {/* Resize Handle */}
+                    <div
+                      onMouseDown={handleResizeStart}
+                      className="absolute -bottom-2 -right-2 w-5 h-5 flex items-center justify-center bg-accent border-2 border-background rounded-full shadow-lg cursor-se-resize pointer-events-auto z-30 transition-all hover:scale-110 active:scale-95"
+                      title="Drag to resize text"
+                    >
+                      <div className="w-1.5 h-1.5 bg-background rounded-full" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Overlay keep/cut indicator */}
-            {selectedChunk !== null && (
-              <div className={`absolute top-3 left-3 text-[10px] font-mono px-2 py-1 rounded-lg border ${
-                chunks[selectedChunk]?.userKeep !== false
-                  ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
-                  : "bg-red-500/20 border-red-500/40 text-red-400"
-              }`}>
-                Chunk {selectedChunk + 1} · {chunks[selectedChunk]?.userKeep !== false ? "✓ KEEP" : "✗ CUT"}
-              </div>
-            )}
+            {selectedChunk !== null && chunks[selectedChunk] && (() => {
+              const chunk = chunks[selectedChunk];
+              return (
+                <div className={`absolute top-3 left-3 text-[10px] font-mono px-2 py-1 rounded-lg border ${
+                  chunk.userKeep !== false
+                    ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                    : "bg-red-500/20 border-red-500/40 text-red-400"
+                }`}>
+                  Chunk {selectedChunk + 1} · {chunk.userKeep !== false ? "✓ KEEP" : "✗ CUT"}
+                </div>
+              );
+            })()}
 
             {/* Play overlay */}
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
@@ -1079,91 +1211,33 @@ function TimelineReview({
               {videoPlay ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
             </button>
             <span className="text-[11px] font-mono text-text-muted">
-              <span className="text-text-primary">{formatTime(currentTime)}</span>
+              <span className="text-text-primary">{formatTime(getEditedTime(currentTime))}</span>
               {" / "}
-              {formatTime(videoDuration || totalDuration)}
+              {formatTime(keptDuration)}
             </span>
             <input
               type="range"
               min={0}
-              max={videoDuration || totalDuration}
+              max={keptDuration}
               step={0.1}
-              value={currentTime}
+              value={getEditedTime(currentTime)}
               onChange={(e) => {
                 const v = parseFloat(e.target.value);
-                if (videoRef.current) videoRef.current.currentTime = v;
-                setCurrentTime(v);
+                const rawT = getRawTime(v);
+                if (videoRef.current) videoRef.current.currentTime = rawT;
+                setCurrentTime(rawT);
               }}
               className="flex-1 h-1 accent-current cursor-pointer"
               style={{ accentColor: "var(--color-accent)" }}
             />
           </div>
 
-          {/* Caption Style & Size Selector */}
-          <div className="bg-surface border border-border rounded-xl p-4 flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <span className="text-[10px] font-mono font-bold tracking-widest text-text-muted uppercase">
-                Visual Caption Style Template
-              </span>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={() => setCaptionStyle("kinetic")}
-                  className={`p-2 rounded-lg border text-[10px] font-bold text-center transition-all cursor-pointer ${
-                    captionStyle === "kinetic"
-                      ? "bg-accent/15 border-accent text-accent"
-                      : "bg-background/40 border-border text-text-muted hover:text-text-primary"
-                  }`}
-                >
-                  ⚡ Kinetic
-                </button>
-                <button
-                  onClick={() => setCaptionStyle("karaoke")}
-                  className={`p-2 rounded-lg border text-[10px] font-bold text-center transition-all cursor-pointer ${
-                    captionStyle === "karaoke"
-                      ? "bg-accent/15 border-accent text-accent"
-                      : "bg-background/40 border-border text-text-muted hover:text-text-primary"
-                  }`}
-                >
-                  🎤 Karaoke
-                </button>
-                <button
-                  onClick={() => setCaptionStyle("minimal")}
-                  className={`p-2 rounded-lg border text-[10px] font-bold text-center transition-all cursor-pointer ${
-                    captionStyle === "minimal"
-                      ? "bg-accent/15 border-accent text-accent"
-                      : "bg-background/40 border-border text-text-muted hover:text-text-primary"
-                  }`}
-                >
-                  ▫️ Minimal
-                </button>
-              </div>
-            </div>
 
-            <div className="flex flex-col gap-2 border-t border-border pt-3">
-              <span className="text-[10px] font-mono font-bold tracking-widest text-text-muted uppercase">
-                Visual Caption Size
-              </span>
-              <div className="grid grid-cols-4 gap-2">
-                {(["small", "medium", "large", "xlarge"] as const).map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setCaptionSize(size)}
-                    className={`p-2 rounded-lg border text-[10px] font-bold text-center capitalize transition-all cursor-pointer ${
-                      captionSize === size
-                        ? "bg-accent/15 border-accent text-accent"
-                        : "bg-background/40 border-border text-text-muted hover:text-text-primary"
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
 
           {/* Selected chunk info */}
           {selectedChunk !== null && chunks[selectedChunk] && (() => {
-            const chunk = chunks[selectedChunk];
+            const idx = selectedChunk;
+            const chunk = chunks[idx];
             const currentKeepRange = chunk.editManifest?.keep?.[0] || [0, chunk.duration];
             const [trimStart, trimEnd] = currentKeepRange;
 
@@ -1171,7 +1245,7 @@ function TimelineReview({
               <div className="bg-surface border border-border rounded-xl p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs font-bold text-text-primary">Chunk {selectedChunk + 1}</p>
+                    <p className="text-xs font-bold text-text-primary">Chunk {idx + 1}</p>
                     <p className="text-[10px] font-mono text-text-muted mt-0.5">
                       {chunk.startTime.toFixed(1)}s – {chunk.endTime.toFixed(1)}s
                       · {chunk.duration.toFixed(1)}s long
@@ -1184,7 +1258,7 @@ function TimelineReview({
                     )}
                   </div>
                   <button
-                    onClick={() => toggleChunk(selectedChunk)}
+                    onClick={() => toggleChunk(idx)}
                     className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
                       chunk.userKeep !== false
                         ? "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
@@ -1203,6 +1277,22 @@ function TimelineReview({
                   <p className="text-[11px] text-text-muted mt-3 font-mono leading-relaxed border-t border-border pt-3">
                     &quot;{chunk.transcript}&quot;
                   </p>
+                )}
+
+                {/* YOLO Visual Tags */}
+                {chunk.yoloLabels && chunk.yoloLabels.length > 0 && (
+                  <div className="mt-3 border-t border-border pt-3">
+                    <span className="text-[9px] font-mono font-bold text-text-muted uppercase block mb-1">
+                      Visual Tags (YOLO)
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {chunk.yoloLabels.map((tag: string, i: number) => (
+                        <span key={i} className="text-xs font-mono bg-accent/20 border border-accent/40 text-accent px-2.5 py-0.5 rounded-lg">
+                          🏷️ {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 )}
 
                 {/* Manual Trimming inputs */}
@@ -1307,10 +1397,10 @@ function TimelineReview({
             {/* Suggestions Chips */}
             <div className="flex flex-wrap gap-1.5 mt-2">
               {[
-                "Cut first 5 seconds",
-                "Remove filler words",
-                "Keep only React parts",
-                "Clean transcript"
+                "Remove dead air",
+                "Keep only face-cam segments",
+                "Cut filler words",
+                "Keep high score only"
               ].map(chip => (
                 <button
                   key={chip}
@@ -1343,10 +1433,30 @@ function TimelineReview({
             )}
           </div>
 
-          <div className="px-5 py-3 border-b border-border">
+          <div className="px-5 py-3 border-b border-border flex items-center justify-between gap-4 flex-wrap">
             <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
               Timeline · {chunks.length} segments · Click to select, toggle to keep/cut
             </p>
+            <div className="flex gap-2">
+              <button
+                onClick={cutAllLowScore}
+                className="text-[10px] font-mono border border-border bg-transparent hover:bg-border/30 px-2.5 py-1 rounded transition-all text-text-muted hover:text-text-primary cursor-pointer"
+              >
+                Cut All Low Score
+              </button>
+              <button
+                onClick={keepAll}
+                className="text-[10px] font-mono border border-border bg-transparent hover:bg-border/30 px-2.5 py-1 rounded transition-all text-text-muted hover:text-text-primary cursor-pointer"
+              >
+                Keep All
+              </button>
+              <button
+                onClick={resetToAiSuggestions}
+                className="text-[10px] font-mono border border-border bg-transparent hover:bg-border/30 px-2.5 py-1 rounded transition-all text-text-muted hover:text-text-primary cursor-pointer"
+              >
+                Reset to AI Suggestions
+              </button>
+            </div>
           </div>
 
           {/* Horizontal scrollable timeline */}
@@ -1363,11 +1473,14 @@ function TimelineReview({
                   <div
                     key={i}
                     onClick={() => { seekToChunk(chunk); }}
-                    className={`cursor-pointer rounded-t shrink-0 transition-all duration-200 ${
-                      !chunk.userKeep ? "bg-red-500/30 border border-red-500/40" :
-                      selectedChunk === i ? "bg-accent border border-accent" :
-                      score >= 8 ? "bg-emerald-500/40 border border-emerald-500/30 hover:bg-emerald-500/60" :
-                      "bg-purple-500/30 border border-purple-500/20 hover:bg-purple-500/50"
+                    className={`cursor-pointer rounded-t shrink-0 transition-all duration-200 border-b-2 ${
+                      !chunk.userKeep
+                        ? "bg-zinc-800/40 border-t border-x border-zinc-700/20 hover:bg-zinc-800/60 opacity-40 border-b-red-500"
+                        : selectedChunk === i
+                        ? "bg-accent border-t border-x border-accent border-b-emerald-500"
+                        : score >= 7
+                        ? "bg-emerald-500/40 border-t border-x border-emerald-500/30 hover:bg-emerald-500/60 border-b-emerald-500"
+                        : "bg-purple-500/30 border-t border-x border-purple-500/20 hover:bg-purple-500/50 border-b-emerald-500"
                     }`}
                     style={{ width: `${Math.max(widthPct * 3, 20)}px`, height: `${scoreH}px` }}
                     title={`Chunk ${i + 1} · Score ${score.toFixed(1)} · ${chunk.duration.toFixed(1)}s`}
@@ -1453,16 +1566,49 @@ export default function EditorPage() {
 
       es.onmessage = (e) => {
         try {
-          const data = JSON.parse(e.data) as SSEEvent;
-          setSse(data);
-          if (data.status === "review" || data.status === "done" || data.status === "error") {
+          const data = JSON.parse(e.data);
+          
+          if (data.type === "chunk_enriched" && data.chunk) {
+            setProject((prev) => {
+              if (!prev) return prev;
+              const newChunks = prev.chunks.map((c) => {
+                if (c.index === data.chunk.index) {
+                  return {
+                    ...c,
+                    yoloLabels: data.chunk.yoloLabels,
+                    userKeep: data.chunk.userKeep,
+                    editManifest: {
+                      ...c.editManifest,
+                      ...data.chunk.editManifest,
+                    },
+                  };
+                }
+                return c;
+              });
+              return { ...prev, chunks: newChunks };
+            });
+            return;
+          }
+
+          if (data.type === "enrichment_complete") {
+            setProject((prev) => {
+              if (!prev) return prev;
+              return { ...prev, aiEnriched: true };
+            });
+            return;
+          }
+
+          const sseEvent = data as SSEEvent;
+          setSse(sseEvent);
+          
+          if (sseEvent.status === "review" || sseEvent.status === "done" || sseEvent.status === "error") {
             loadProject();
           }
-          if (data.status === "cancelled") {
+          if (sseEvent.status === "cancelled") {
             loadProject();
             es.close();
           }
-          if (data.status === "done" || data.status === "error") {
+          if (sseEvent.status === "done" || sseEvent.status === "error") {
             setIsRendering(false);
             es.close();
           }
