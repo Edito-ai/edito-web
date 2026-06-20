@@ -5,9 +5,8 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Play, Pause, CheckCircle, XCircle, Download,
-  Loader2, Scissors, Sparkles, RefreshCw, ToggleLeft,
-  ToggleRight, Star, AlertCircle, ChevronDown, ChevronUp,
-  FileText, Cloud, Home, StopCircle
+  Loader2, Scissors, Sparkles, RefreshCw, AlertCircle,
+  FileText, Cloud, Home, StopCircle, Upload, Video
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -42,6 +41,19 @@ interface Chunk {
   userKeep: boolean;
   words?: { word: string; start: number; end: number }[];
   yoloLabels?: string[];
+  assetId?: string;
+  assetKey?: string;
+}
+
+interface Asset {
+  _id: string;
+  key: string;
+  filename: string;
+  mimeType: string;
+  url: string;
+  order: number;
+  status: "pending" | "processing" | "done" | "error";
+  errorMessage?: string;
 }
 
 interface Project {
@@ -60,6 +72,7 @@ interface Project {
   captionSize?: "small" | "medium" | "large" | "xlarge";
   captionFontSize?: number;
   aiEnriched?: boolean;
+  assets?: Asset[];
 }
 
 interface SSEEvent {
@@ -95,6 +108,34 @@ function stageIndex(status: string) {
 
 
 
+const NOTICES = [
+  "We are working, just chill and watch Netflix 🍿",
+  "Polishing frames, grab a coffee ☕",
+  "Removing silent pauses, enjoy the peace 🤫",
+  "Transcribing speech, testing our spelling 📝",
+  "Splicing clips together, almost there 🎬",
+  "Tuning audio levels, check your speakers 🔊"
+];
+
+function FunnyNotice() {
+  const [notice, setNotice] = useState(NOTICES[0]);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNotice(prev => {
+        const nextIdx = (NOTICES.indexOf(prev) + 1) % NOTICES.length;
+        return NOTICES[nextIdx];
+      });
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <p className="text-[10px] text-accent/90 font-mono mt-3 bg-accent/5 border border-accent/20 rounded-xl px-4 py-2.5 select-none inline-block animate-pulse">
+      {notice}
+    </p>
+  );
+}
+
 // ─── Processing View ──────────────────────────────────────────────────────────
 function ProcessingView({ sse, projectName, onCancel, isCancelling }: { sse: SSEEvent | null; projectName: string; onCancel: () => void; isCancelling: boolean }) {
   const currentStage = stageIndex(sse?.status || "uploading");
@@ -104,6 +145,7 @@ function ProcessingView({ sse, projectName, onCancel, isCancelling }: { sse: SSE
       <div className="text-center">
         <h2 className="text-2xl font-bold text-text-primary font-display">{projectName}</h2>
         <p className="text-sm text-text-muted mt-2">AI pipeline is processing your video…</p>
+        <FunnyNotice />
       </div>
 
       {/* Pipeline Stages */}
@@ -199,7 +241,8 @@ function ErrorView({ message }: { message: string }) {
 }
 
 // ─── Render Done View ─────────────────────────────────────────────────────────
-function RenderDoneView({ project }: { project: Project }) {
+function RenderDoneView({ project, onReEdit }: { project: Project; onReEdit: () => Promise<void> }) {
+  const [isReEditing, setIsReEditing] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [videoPlay, setVideoPlay] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -330,7 +373,7 @@ function RenderDoneView({ project }: { project: Project }) {
       )}
 
       {/* Download buttons */}
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-wrap justify-center">
         {project.finalKey && (
           <a
             href={`${API}/api/assets/${project.finalKey}?download=true`}
@@ -355,6 +398,22 @@ function RenderDoneView({ project }: { project: Project }) {
             Download Subtitles
           </a>
         )}
+        <button
+          onClick={async () => {
+            setIsReEditing(true);
+            await onReEdit();
+            setIsReEditing(false);
+          }}
+          disabled={isReEditing}
+          className="flex items-center gap-2 px-6 py-3 bg-surface border border-border text-text-primary font-semibold text-sm rounded-xl hover:bg-border transition-all cursor-pointer disabled:opacity-50"
+        >
+          {isReEditing ? (
+            <Loader2 className="w-4 h-4 animate-spin text-accent" />
+          ) : (
+            <Scissors className="w-4 h-4 text-accent" />
+          )}
+          Re-open Editor
+        </button>
       </div>
 
       <Link href="/dashboard" className="text-xs text-text-muted hover:text-accent transition-colors font-mono">
@@ -364,135 +423,7 @@ function RenderDoneView({ project }: { project: Project }) {
   );
 }
 
-// ─── Chunk Block ──────────────────────────────────────────────────────────────
-function ChunkBlock({
-  chunk,
-  isActive,
-  totalDuration,
-  onToggle,
-  onCaptionEdit,
-  onSelect,
-}: {
-  chunk: Chunk;
-  isActive: boolean;
-  totalDuration: number;
-  onToggle: () => void;
-  onCaptionEdit: (chunkIdx: number, capIdx: number, text: string) => void;
-  onSelect: () => void;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const widthPct = (chunk.duration / totalDuration) * 100;
-  const score = chunk.editManifest?.score ?? 5;
-  const scoreColor = score >= 7 ? "text-emerald-400" : score >= 4 ? "text-yellow-400" : "text-red-400";
 
-  return (
-    <div
-      className={`relative shrink-0 rounded-xl border-2 transition-all duration-200 overflow-hidden ${
-        !chunk.userKeep
-          ? "border-red-500/40 bg-red-500/5 opacity-60"
-          : isActive
-          ? "border-accent bg-accent/10"
-          : "border-border bg-surface hover:border-accent/40"
-      }`}
-      style={{ minWidth: `${Math.max(widthPct * 2, 120)}px`, maxWidth: "320px" }}
-      onClick={onSelect}
-    >
-      {/* Score badge */}
-      <div className={`absolute top-2 right-2 text-[10px] font-mono font-bold ${scoreColor}`}>
-        {score.toFixed(1)}
-      </div>
-
-      {/* Highlight star */}
-      {(chunk.editManifest?.highlights?.length ?? 0) > 0 && chunk.userKeep && (
-        <div className="absolute top-2 left-2">
-          <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-        </div>
-      )}
-
-      <div className="p-3 pt-4">
-        {/* Chunk label */}
-        <p className="text-[10px] font-mono text-text-muted">Chunk {chunk.index + 1}</p>
-        <p className="text-[10px] font-mono text-text-muted/60">
-          {chunk.startTime.toFixed(1)}s – {chunk.endTime.toFixed(1)}s
-        </p>
-
-        {/* Transcript snippet */}
-        {chunk.transcript && (
-          <p className="text-[11px] text-text-muted mt-1.5 leading-tight">
-            &quot;...{chunk.transcript.substring(0, 60)}{chunk.transcript.length > 60 ? "..." : ""}&quot;
-          </p>
-        )}
-
-        {/* Filler word markers */}
-        {(chunk.editManifest?.fillerWords?.length ?? 0) > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {chunk.editManifest.fillerWords.slice(0, 4).map((fw, i) => (
-              <span key={i} className="text-[9px] font-mono bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 px-1 rounded">
-                {fw.word}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* YOLO Visual Tags */}
-        {chunk.yoloLabels && chunk.yoloLabels.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {chunk.yoloLabels.map((tag, i) => (
-              <span key={i} className="text-[9px] font-mono bg-accent/10 text-accent px-2 py-0.5 rounded-full font-medium">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex items-center gap-2 mt-3">
-          <button
-            onClick={(e) => { e.stopPropagation(); onToggle(); }}
-            className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all cursor-pointer ${
-              chunk.userKeep
-                ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400"
-                : "bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-400"
-            }`}
-          >
-            {chunk.userKeep ? <ToggleRight className="w-3 h-3" /> : <ToggleLeft className="w-3 h-3" />}
-            {chunk.userKeep ? "Keep" : "Cut"}
-          </button>
-
-          {(chunk.editManifest?.captions?.length ?? 0) > 0 && (
-            <button
-              onClick={(e) => { e.stopPropagation(); setExpanded(x => !x); }}
-              className="flex items-center gap-1 text-[10px] font-mono text-text-muted hover:text-text-primary transition-colors cursor-pointer"
-            >
-              {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-              {chunk.editManifest.captions.length} captions
-            </button>
-          )}
-        </div>
-
-        {/* Captions editor (expanded) */}
-        {expanded && (
-          <div className="mt-3 space-y-2 border-t border-border pt-3">
-            {chunk.editManifest.captions.map((cap, ci) => (
-              <div key={ci}>
-                <p className="text-[9px] font-mono text-text-muted mb-1">
-                  {cap.start.toFixed(1)}s – {cap.end.toFixed(1)}s
-                </p>
-                <textarea
-                  value={cap.text}
-                  onChange={(e) => onCaptionEdit(chunk.index, ci, e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
-                  rows={2}
-                  className="w-full bg-background/60 border border-border rounded-lg px-2 py-1.5 text-[11px] text-text-primary resize-none focus:outline-none focus:border-accent/50 font-mono"
-                />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // ─── Timeline Review View ─────────────────────────────────────────────────────
 function TimelineReview({
@@ -532,6 +463,7 @@ function TimelineReview({
   const [selectedChunk, setSelectedChunk] = useState<number | null>(null);
   const [videoPlay, setVideoPlay] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [skipCuts, setSkipCuts] = useState(false); // Play all chunks by default, toggle to skip cut segments
   const [captionStyle] = useState<"kinetic" | "karaoke" | "minimal">(project.captionStyle || "kinetic");
   const [captionSize] = useState<"small" | "medium" | "large" | "xlarge">(project.captionSize || "medium");
   const [captionFontSize, setCaptionFontSize] = useState<number>(project.captionFontSize || 24);
@@ -542,6 +474,10 @@ function TimelineReview({
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiDiff, setAiDiff] = useState<string[]>([]);
+
+  const activeChunk = selectedChunk !== null && chunks[selectedChunk] ? chunks[selectedChunk] : null;
+  const currentKeepRange = activeChunk?.editManifest?.keep?.[0] || [0, activeChunk?.duration || 0];
+  const [trimStart, trimEnd] = currentKeepRange;
 
   // Debounced auto-save to DB
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -647,75 +583,121 @@ function TimelineReview({
     })
     .find(cap => currentTime >= cap.start && currentTime <= cap.end);
 
-  const chunksRef = useRef(chunks);
-  useEffect(() => {
-    chunksRef.current = chunks;
-  }, [chunks]);
+  const getAssetTime = (globalTime: number, chunk: Chunk): number => {
+    const assetChunks = chunks.filter(c => c.assetId === chunk.assetId);
+    if (assetChunks.length === 0) return 0;
+    const assetStart = Math.min(...assetChunks.map(c => c.startTime));
+    return globalTime - assetStart;
+  };
 
-  // Sync video element with playhead-skipping
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+  const getGlobalTime = (assetTime: number, chunk: Chunk): number => {
+    const assetChunks = chunks.filter(c => c.assetId === chunk.assetId);
+    if (assetChunks.length === 0) return assetTime;
+    const assetStart = Math.min(...assetChunks.map(c => c.startTime));
+    return assetStart + assetTime;
+  };
 
-    const onTime = () => {
-      const time = video.currentTime;
-      setCurrentTime(time);
+  // Handle video element timeupdate event (including playhead-skipping)
+  const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const video = e.currentTarget;
+    if (!activeChunk) return;
 
-      const activeChunks = chunksRef.current;
-      const currentChunkIdx = activeChunks.findIndex(c => time >= c.startTime && time < c.endTime);
+    // Check if the video's src matches the activeChunk's src
+    const expectedPath = `/api/assets/${activeChunk.assetKey || project.originalKey || ""}`;
+    const decodedSrc = decodeURIComponent(video.src);
+    const decodedExpected = decodeURIComponent(expectedPath);
+    if (!decodedSrc.includes(decodedExpected)) {
+      return; // Ignore timeupdates during transition
+    }
 
-      if (currentChunkIdx >= 0) {
-        const currentChunk = activeChunks[currentChunkIdx];
-        if (currentChunk.userKeep === false) {
-          const nextKeptChunk = activeChunks.slice(currentChunkIdx + 1).find(c => c.userKeep !== false);
-          if (nextKeptChunk) {
-            const nextRanges = nextKeptChunk.editManifest?.keep || [];
-            const nextStartOffset = nextRanges.length > 0 ? nextRanges[0][0] : 0;
-            video.currentTime = nextKeptChunk.startTime + nextStartOffset;
-            setCurrentTime(nextKeptChunk.startTime + nextStartOffset);
+    const assetTime = video.currentTime;
+    
+    // Ignore initial 0 timeupdate if we are seeking to a non-zero time in the chunk
+    const targetAssetTime = getAssetTime(currentTime, activeChunk);
+    if (assetTime === 0 && targetAssetTime > 0.5) {
+      return;
+    }
+
+    const time = getGlobalTime(assetTime, activeChunk);
+    setCurrentTime(time);
+
+    if (!skipCuts) return; // Play all chunks contiguously if not in skipCuts preview mode
+
+    const currentChunkIdx = chunks.findIndex(c => time >= c.startTime && time < c.endTime);
+
+    if (currentChunkIdx >= 0) {
+      const currentChunk = chunks[currentChunkIdx];
+      if (currentChunk.userKeep === false) {
+        const nextKeptChunk = chunks.slice(currentChunkIdx + 1).find(c => c.userKeep !== false);
+        if (nextKeptChunk) {
+          const nextRanges = nextKeptChunk.editManifest?.keep || [];
+          const nextStartOffset = nextRanges.length > 0 ? nextRanges[0][0] : 0;
+          const nextGlobalTime = nextKeptChunk.startTime + nextStartOffset;
+          const nextAssetTime = getAssetTime(nextGlobalTime, nextKeptChunk);
+
+          if (nextKeptChunk.assetId === currentChunk.assetId) {
+            video.currentTime = nextAssetTime;
+            setCurrentTime(nextGlobalTime);
           } else {
-            video.pause();
-            setVideoPlay(false);
+            setCurrentTime(nextGlobalTime);
+            setSelectedChunk(nextKeptChunk.index);
           }
         } else {
-          const keepRanges = currentChunk.editManifest?.keep || [];
-          if (keepRanges.length > 0) {
-            const relTime = time - currentChunk.startTime;
-             const currentRange = keepRanges.find(([s, e]) => relTime >= s && relTime <= e);
-             if (!currentRange) {
-               const nextRange = keepRanges.find(([s]) => s > relTime);
-              if (nextRange) {
-                video.currentTime = currentChunk.startTime + nextRange[0];
-                setCurrentTime(currentChunk.startTime + nextRange[0]);
-              } else {
-                const nextKeptChunk = activeChunks.slice(currentChunkIdx + 1).find(c => c.userKeep !== false);
-                if (nextKeptChunk) {
-                  const nextRanges = nextKeptChunk.editManifest?.keep || [];
-                  const nextStartOffset = nextRanges.length > 0 ? nextRanges[0][0] : 0;
-                  video.currentTime = nextKeptChunk.startTime + nextStartOffset;
-                  setCurrentTime(nextKeptChunk.startTime + nextStartOffset);
+          video.pause();
+          setVideoPlay(false);
+        }
+      } else {
+        const keepRanges = currentChunk.editManifest?.keep || [];
+        if (keepRanges.length > 0) {
+          const relTime = time - currentChunk.startTime;
+          const currentRange = keepRanges.find(([s, e]) => relTime >= s && relTime <= e);
+          if (!currentRange) {
+            const nextRange = keepRanges.find(([s]) => s > relTime);
+            if (nextRange) {
+              const nextGlobalTime = currentChunk.startTime + nextRange[0];
+              const nextAssetTime = getAssetTime(nextGlobalTime, currentChunk);
+              video.currentTime = nextAssetTime;
+              setCurrentTime(nextGlobalTime);
+            } else {
+              const nextKeptChunk = chunks.slice(currentChunkIdx + 1).find(c => c.userKeep !== false);
+              if (nextKeptChunk) {
+                const nextRanges = nextKeptChunk.editManifest?.keep || [];
+                const nextStartOffset = nextRanges.length > 0 ? nextRanges[0][0] : 0;
+                const nextGlobalTime = nextKeptChunk.startTime + nextStartOffset;
+                const nextAssetTime = getAssetTime(nextGlobalTime, nextKeptChunk);
+
+                if (nextKeptChunk.assetId === currentChunk.assetId) {
+                  video.currentTime = nextAssetTime;
+                  setCurrentTime(nextGlobalTime);
                 } else {
-                  video.pause();
-                  setVideoPlay(false);
+                  setCurrentTime(nextGlobalTime);
+                  setSelectedChunk(nextKeptChunk.index);
                 }
+              } else {
+                video.pause();
+                setVideoPlay(false);
               }
             }
           }
         }
       }
-    };
-    const onEnd = () => setVideoPlay(false);
-    video.addEventListener("timeupdate", onTime);
-    video.addEventListener("ended", onEnd);
-    return () => { video.removeEventListener("timeupdate", onTime); video.removeEventListener("ended", onEnd); };
-  }, []);
+    }
+  };
+
+  const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const video = e.currentTarget;
+    if (!activeChunk) return;
+    const targetAssetTime = getAssetTime(currentTime, activeChunk);
+    // Seek to target asset time when metadata is loaded
+    video.currentTime = targetAssetTime;
+  };
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
     if (videoPlay) video.play().catch(() => setVideoPlay(false));
     else video.pause();
-  }, [videoPlay]);
+  }, [videoPlay, activeChunk?.assetKey]);
 
   // Highlight which chunk is currently playing
   useEffect(() => {
@@ -931,10 +913,11 @@ function TimelineReview({
   };
 
   const seekToChunk = (chunk: Chunk) => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = chunk.startTime;
-      setCurrentTime(chunk.startTime);
+    const relativeT = getAssetTime(chunk.startTime, chunk);
+    if (videoRef.current && (chunk.assetId === activeChunk?.assetId || !chunk.assetId)) {
+      videoRef.current.currentTime = relativeT;
     }
+    setCurrentTime(chunk.startTime);
     setSelectedChunk(chunk.index);
   };
 
@@ -1057,25 +1040,48 @@ function TimelineReview({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0">
-      {/* Top stats bar */}
-      <div className="flex items-center gap-6 px-6 py-3 border-b border-border bg-surface/50 flex-wrap">
-        <div className="flex items-center gap-2">
-          <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="text-xs font-mono text-text-muted">Segments: {keptCount}/{chunks.length} kept</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Scissors className="w-3.5 h-3.5 text-orange-400" />
-          <span className="text-xs font-mono text-text-muted">
-            Original: {formatTime(totalDuration)} → Final: {formatTime(keptDuration)} | Saved: {timeSaved}s
-          </span>
-        </div>
+    <div className="flex-1 flex flex-col min-h-0 bg-background">
 
-        <div className="ml-auto">
+
+      {timeSaved > 0 && (
+        <div className="w-full bg-emerald-500/10 border-b border-emerald-500/20 text-emerald-400 text-[11px] font-mono py-2 px-6 text-center shrink-0">
+          ✂️ AI removed {timeSaved}s of dead air and filler — saving you hours of manual editing
+        </div>
+      )}
+
+      {/* Top action bar / Render controls */}
+      <div className="w-full border-b border-border bg-surface/30 px-6 py-3 flex items-center justify-between gap-4 shrink-0">
+        <div className="flex items-center gap-4 text-xs font-mono text-text-muted">
+          <span>{keptCount}/{chunks.length} segments kept</span>
+          <span>Duration: {formatTime(totalDuration)} → {formatTime(keptDuration)}</span>
+          <span>Saved: {timeSaved}s</span>
+        </div>
+        
+        <div className="flex gap-2 items-center">
+          <button
+            onClick={cutAllLowScore}
+            className="text-[10px] font-mono border border-border bg-transparent hover:bg-border/30 px-2.5 py-1.5 rounded transition-all text-text-muted hover:text-text-primary cursor-pointer"
+          >
+            Cut Low Score
+          </button>
+          <button
+            onClick={keepAll}
+            className="text-[10px] font-mono border border-border bg-transparent hover:bg-border/30 px-2.5 py-1.5 rounded transition-all text-text-muted hover:text-text-primary cursor-pointer"
+          >
+            Keep All
+          </button>
+          <button
+            onClick={resetToAiSuggestions}
+            className="text-[10px] font-mono border border-border bg-transparent hover:bg-border/30 px-2.5 py-1.5 rounded transition-all text-text-muted hover:text-text-primary cursor-pointer"
+          >
+            Reset AI
+          </button>
+          <div className="w-px h-4 bg-border mx-1" />
           <button
             onClick={() => onApprove(chunks, captionStyle, captionSize, captionFontSize)}
             disabled={isRendering || keptCount === 0}
-            className="flex items-center gap-2 px-5 py-2 bg-accent text-background font-extrabold text-xs rounded-xl hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
+            className="flex items-center gap-1.5 px-4 py-1.5 bg-accent text-background font-extrabold text-[11px] rounded-lg hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all animate-[pulse_2s_infinite]"
+            style={{ animationDuration: "3s" }}
           >
             {isRendering ? (
               <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Rendering…</>
@@ -1086,36 +1092,40 @@ function TimelineReview({
         </div>
       </div>
 
-      {/* Background AI Enrichment banner */}
-      {!project.aiEnriched && (
-        <div className="w-full bg-accent/10 border-b border-accent/20 text-accent text-xs font-mono py-2 px-6 text-center flex items-center justify-center gap-2">
-          <Loader2 className="w-3.5 h-3.5 animate-spin" /> AI is refining decisions in background...
-        </div>
-      )}
+      {/* Main layout: upper row (player + chunk editor list) + lower row (timeline + prompt) */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        {/* Upper section: Player & Subtitles Editor */}
+        <div className="flex-1 flex gap-4 p-4 min-h-0 overflow-hidden">
+          {/* Player Container (65% width) */}
+          <div style={{ flex: 2 }} className="flex flex-col gap-3 min-h-0 overflow-y-auto">
+            <div className="relative flex-1 min-h-[250px] rounded-xl bg-black border border-border overflow-hidden group">
+              {chunks.length > 0 ? (
+                <video
+                  ref={videoRef}
+                  src={`${API}/api/assets/${encodeURI(activeChunk?.assetKey || project.originalKey || "")}`}
+                  className="w-full h-full object-contain"
+                  playsInline
+                  onTimeUpdate={handleTimeUpdate}
+                  onLoadedMetadata={handleLoadedMetadata}
+                  onEnded={() => setVideoPlay(false)}
+                />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-zinc-950/40 select-none">
+                  <Video className="w-12 h-12 text-accent/40 animate-[pulse_3s_infinite] mb-3" />
+                  <p className="text-sm font-bold text-text-primary font-display">Blank Editing Canvas</p>
+                  <p className="text-xs text-text-muted mt-2 max-w-sm">
+                    Your timeline is empty. Ask the AI Director to compile a first cut or select specific segments using prompts:
+                  </p>
+                  <div className="mt-4 p-3 bg-surface/50 border border-border rounded-xl flex flex-col gap-1.5 text-[10px] font-mono text-accent">
+                    <span>Try: &quot;prepare a first cut from @1st_video&quot;</span>
+                    <span>Try: &quot;combine all assets&quot;</span>
+                    <span>Try: &quot;after @1st_video, place @2nd_video&quot;</span>
+                  </div>
+                </div>
+              )}
 
-      {/* Time Saved banner */}
-      {timeSaved > 0 && (
-        <div className="w-full bg-emerald-500/10 border-b border-emerald-500/20 text-emerald-400 text-xs font-mono py-2 px-6 text-center">
-          ✂️ AI removed {timeSaved}s of dead air and filler — saving you hours of manual editing
-        </div>
-      )}
-
-      {/* Main layout: video preview + chunks */}
-      <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
-        {/* Left: Video Preview */}
-        <div className="lg:w-[65%] flex flex-col gap-3 p-6 border-r border-border overflow-y-auto">
-          <div className="relative flex-1 min-h-[300px] rounded-xl bg-black border border-border overflow-hidden group">
-            <video
-              ref={videoRef}
-              src={`${API}/api/assets/${project.originalKey || ""}`}
-              className="w-full h-full object-contain"
-              playsInline
-            />
-
-            {/* Subtitle Overlay in Screen */}
-            {activeCaption && (() => {
-              const cap = activeCaption;
-              return (
+              {/* Subtitle Overlay in Screen */}
+              {activeCaption && chunks.length > 0 && (
                 <div className="absolute bottom-12 left-6 right-6 z-20 flex justify-center text-center pointer-events-none">
                   <div className="relative pointer-events-auto inline-block group/resize select-none">
                     {captionStyle === "kinetic" && (
@@ -1123,7 +1133,7 @@ function TimelineReview({
                         style={{ fontSize: `${captionFontSize}px`, lineHeight: "1.2" }}
                         className="font-black uppercase tracking-wide bg-accent text-background px-3.5 py-1.5 rounded-lg shadow-xl shadow-black/60 -rotate-1 inline-block max-w-[90%]"
                       >
-                        {cap.text}
+                        {activeCaption.text}
                       </span>
                     )}
                     {captionStyle === "karaoke" && (
@@ -1131,10 +1141,10 @@ function TimelineReview({
                         style={{ fontSize: `${captionFontSize}px`, lineHeight: "1.2" }}
                         className="font-bold bg-surface/90 text-text-primary px-4 py-2 rounded-xl border border-border shadow-xl flex flex-wrap justify-center gap-x-1.5 max-w-[90%] font-display"
                       >
-                        {cap.text.split(" ").map((word, wIdx) => {
-                          const duration = cap.end - cap.start;
-                          const progress = (currentTime - cap.start) / duration;
-                          const words = cap.text.split(" ");
+                        {activeCaption.text.split(" ").map((word, wIdx) => {
+                          const duration = activeCaption.end - activeCaption.start;
+                          const progress = (currentTime - activeCaption.start) / duration;
+                          const words = activeCaption.text.split(" ");
                           const activeWordIndex = Math.min(
                             Math.floor(progress * words.length),
                             words.length - 1
@@ -1160,7 +1170,7 @@ function TimelineReview({
                         style={{ fontSize: `${captionFontSize}px`, lineHeight: "1.2" }}
                         className="font-medium text-text-primary px-3 py-1 bg-black/40 backdrop-blur-sm rounded-md max-w-[85%] border border-border/30 inline-block"
                       >
-                        {cap.text}
+                        {activeCaption.text}
                       </span>
                     )}
 
@@ -1174,351 +1184,527 @@ function TimelineReview({
                     </div>
                   </div>
                 </div>
-              );
-            })()}
+              )}
 
-            {/* Overlay keep/cut indicator */}
-            {selectedChunk !== null && chunks[selectedChunk] && (() => {
-              const chunk = chunks[selectedChunk];
-              return (
+              {/* Overlay keep/cut indicator */}
+              {activeChunk && chunks.length > 0 && (
                 <div className={`absolute top-3 left-3 text-[10px] font-mono px-2 py-1 rounded-lg border ${
-                  chunk.userKeep !== false
+                  activeChunk.userKeep !== false
                     ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
                     : "bg-red-500/20 border-red-500/40 text-red-400"
                 }`}>
-                  Chunk {selectedChunk + 1} · {chunk.userKeep !== false ? "✓ KEEP" : "✗ CUT"}
+                  Chunk {selectedChunk! + 1} · {activeChunk.userKeep !== false ? "✓ KEEP" : "✗ CUT"}
                 </div>
-              );
-            })()}
+              )}
 
-            {/* Play overlay */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
-              <button
-                onClick={() => setVideoPlay(v => !v)}
-                className="w-14 h-14 rounded-full bg-accent text-background flex items-center justify-center shadow-lg cursor-pointer hover:scale-105 transition-transform"
-              >
-                {videoPlay ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current ml-0.5" />}
-              </button>
+              {/* Play overlay */}
+              {chunks.length > 0 && (
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                  <button
+                    onClick={() => setVideoPlay(v => !v)}
+                    className="w-14 h-14 rounded-full bg-accent text-background flex items-center justify-center shadow-lg cursor-pointer hover:scale-105 transition-transform"
+                  >
+                    {videoPlay ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current ml-0.5" />}
+                  </button>
+                </div>
+              )}
             </div>
+
+            {/* Playback controls */}
+            {chunks.length > 0 && (
+              <div className="flex items-center gap-3 bg-surface border border-border rounded-xl px-4 py-2.5 shrink-0">
+                <button
+                  onClick={() => setVideoPlay(v => !v)}
+                  className="w-8 h-8 rounded-lg bg-border flex items-center justify-center hover:bg-accent hover:text-background transition-all cursor-pointer text-text-primary shrink-0"
+                >
+                  {videoPlay ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
+                </button>
+                
+                <button
+                  onClick={() => setSkipCuts(prev => !prev)}
+                  className={`px-3 py-1.5 rounded-lg border text-[10px] font-mono transition-all cursor-pointer ${
+                    skipCuts
+                      ? "bg-accent/15 border-accent/30 text-accent hover:bg-accent/25"
+                      : "bg-surface border-border text-text-muted hover:bg-border/45"
+                  }`}
+                  title="Toggle playhead skipping over cut segments"
+                >
+                  {skipCuts ? "Preview Cuts: ON" : "Preview Cuts: OFF"}
+                </button>
+
+                <span className="text-[11px] font-mono text-text-muted shrink-0">
+                  <span className="text-text-primary">
+                    {formatTime(skipCuts ? getEditedTime(currentTime) : currentTime)}
+                  </span>
+                  {" / "}
+                  {formatTime(skipCuts ? keptDuration : totalDuration)}
+                </span>
+                
+                <input
+                  type="range"
+                  min={0}
+                  max={skipCuts ? keptDuration : totalDuration}
+                  step={0.1}
+                  value={skipCuts ? getEditedTime(currentTime) : currentTime}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value);
+                    const rawT = skipCuts ? getRawTime(v) : v;
+                    if (videoRef.current) videoRef.current.currentTime = rawT;
+                    setCurrentTime(rawT);
+                  }}
+                  className="flex-1 h-1 accent-current cursor-pointer"
+                  style={{ accentColor: "var(--color-accent)" }}
+                />
+              </div>
+            )}
           </div>
 
-          {/* Playback controls */}
-          <div className="flex items-center gap-3 bg-surface border border-border rounded-xl px-4 py-2.5">
-            <button
-              onClick={() => setVideoPlay(v => !v)}
-              className="w-8 h-8 rounded-lg bg-border flex items-center justify-center hover:bg-accent hover:text-background transition-all cursor-pointer text-text-primary"
-            >
-              {videoPlay ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
-            </button>
-            <span className="text-[11px] font-mono text-text-muted">
-              <span className="text-text-primary">{formatTime(getEditedTime(currentTime))}</span>
-              {" / "}
-              {formatTime(keptDuration)}
-            </span>
-            <input
-              type="range"
-              min={0}
-              max={keptDuration}
-              step={0.1}
-              value={getEditedTime(currentTime)}
-              onChange={(e) => {
-                const v = parseFloat(e.target.value);
-                const rawT = getRawTime(v);
-                if (videoRef.current) videoRef.current.currentTime = rawT;
-                setCurrentTime(rawT);
-              }}
-              className="flex-1 h-1 accent-current cursor-pointer"
-              style={{ accentColor: "var(--color-accent)" }}
-            />
-          </div>
-
-
-
-          {/* Selected chunk info */}
-          {selectedChunk !== null && chunks[selectedChunk] && (() => {
-            const idx = selectedChunk;
-            const chunk = chunks[idx];
-            const currentKeepRange = chunk.editManifest?.keep?.[0] || [0, chunk.duration];
-            const [trimStart, trimEnd] = currentKeepRange;
-
-            return (
-              <div className="bg-surface border border-border rounded-xl p-4">
-                <div className="flex items-start justify-between gap-4">
+          {/* Subtitles & Chunk Editor (35% width) */}
+          <div className="flex-1 flex flex-col gap-3 min-h-0 bg-surface/10 border border-border rounded-xl p-3 overflow-hidden">
+            {/* Selected chunk details / Caption Editor */}
+            {activeChunk ? (
+              <div className="flex flex-col h-full gap-3 min-h-0">
+                <div className="flex items-start justify-between gap-4 shrink-0">
                   <div>
-                    <p className="text-xs font-bold text-text-primary">Chunk {idx + 1}</p>
+                    <p className="text-xs font-bold text-text-primary">Segment {selectedChunk! + 1}</p>
                     <p className="text-[10px] font-mono text-text-muted mt-0.5">
-                      {chunk.startTime.toFixed(1)}s – {chunk.endTime.toFixed(1)}s
-                      · {chunk.duration.toFixed(1)}s long
-                      · Score: {chunk.editManifest?.score?.toFixed(1) ?? "N/A"}
+                      {activeChunk.startTime.toFixed(1)}s – {activeChunk.endTime.toFixed(1)}s
+                      · Score: {activeChunk.editManifest?.score?.toFixed(1) ?? "N/A"}
                     </p>
-                    {(chunk.editManifest?.highlights?.length ?? 0) > 0 && (
-                      <p className="text-[10px] text-yellow-400 mt-1">
-                        ★ {chunk.editManifest.highlights[0]}
-                      </p>
-                    )}
                   </div>
                   <button
-                    onClick={() => toggleChunk(idx)}
+                    onClick={() => toggleChunk(selectedChunk!)}
                     className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
-                      chunk.userKeep !== false
+                      activeChunk.userKeep !== false
                         ? "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
                         : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
                     }`}
                   >
-                    {chunk.userKeep !== false ? (
-                      <><XCircle className="w-3.5 h-3.5" /> Cut this</>
+                    {activeChunk.userKeep !== false ? (
+                      <><XCircle className="w-3.5 h-3.5" /> Cut</>
                     ) : (
-                      <><CheckCircle className="w-3.5 h-3.5" /> Keep this</>
+                      <><CheckCircle className="w-3.5 h-3.5" /> Keep</>
                     )}
                   </button>
                 </div>
 
-                {chunk.transcript && (
-                  <p className="text-[11px] text-text-muted mt-3 font-mono leading-relaxed border-t border-border pt-3">
-                    &quot;{chunk.transcript}&quot;
+                {activeChunk.transcript && (
+                  <p className="text-[11px] text-text-muted font-mono leading-relaxed bg-background/50 p-2 rounded-lg border border-border shrink-0 select-text">
+                    &quot;{activeChunk.transcript}&quot;
                   </p>
                 )}
 
-                {/* YOLO Visual Tags */}
-                {chunk.yoloLabels && chunk.yoloLabels.length > 0 && (
-                  <div className="mt-3 border-t border-border pt-3">
-                    <span className="text-[9px] font-mono font-bold text-text-muted uppercase block mb-1">
-                      Visual Tags (YOLO)
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {chunk.yoloLabels.map((tag: string, i: number) => (
-                        <span key={i} className="text-xs font-mono bg-accent/20 border border-accent/40 text-accent px-2.5 py-0.5 rounded-lg">
-                          🏷️ {tag}
-                        </span>
-                      ))}
+                {/* manual caption editing */}
+                <div className="flex-1 overflow-y-auto space-y-3 border-t border-border pt-2 min-h-0 pr-1">
+                  <span className="text-[9px] font-mono font-bold text-text-muted uppercase block">Edit Segment Subtitles</span>
+                  {(activeChunk.editManifest?.captions?.length ?? 0) > 0 ? (
+                    activeChunk.editManifest.captions.map((cap, ci) => (
+                      <div key={ci} className="space-y-1">
+                        <p className="text-[9px] font-mono text-text-muted">
+                          {cap.start.toFixed(1)}s – {cap.end.toFixed(1)}s
+                        </p>
+                        <textarea
+                          value={cap.text}
+                          onChange={(e) => editCaption(activeChunk.index, ci, e.target.value)}
+                          rows={2}
+                          className="w-full bg-background border border-border rounded-lg px-2.5 py-1.5 text-[11px] text-text-primary resize-none focus:outline-none focus:border-accent/50 font-mono"
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-[10px] text-text-muted italic">No captions generated for this segment.</p>
+                  )}
+                </div>
+
+                {/* Manual Trimming & split controls */}
+                <div className="border-t border-border pt-3 space-y-2 shrink-0">
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <span className="text-[8px] font-mono font-bold text-text-muted uppercase block">Trim Start (sec)</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={trimEnd}
+                        step={0.1}
+                        value={trimStart}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value) || 0;
+                          handleTrimChange(Math.max(0, Math.min(val, trimEnd)), trimEnd);
+                        }}
+                        className="w-full bg-background border border-border rounded-lg px-2 py-1 text-[11px] text-text-primary focus:outline-none focus:border-accent/50 font-mono"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[8px] font-mono font-bold text-text-muted uppercase block">Trim End (sec)</span>
+                      <input
+                        type="number"
+                        min={trimStart}
+                        max={activeChunk.duration}
+                        step={0.1}
+                        value={trimEnd}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value) || activeChunk.duration;
+                          handleTrimChange(trimStart, Math.max(trimStart, Math.min(val, activeChunk.duration)));
+                        }}
+                        className="w-full bg-background border border-border rounded-lg px-2 py-1 text-[11px] text-text-primary focus:outline-none focus:border-accent/50 font-mono"
+                      />
                     </div>
                   </div>
-                )}
 
-                {/* Manual Trimming inputs */}
-                <div className="flex gap-4 items-center mt-3 border-t border-border pt-3">
-                  <div className="flex-1">
-                    <span className="text-[9px] font-mono font-bold text-text-muted uppercase block mb-1">
-                      Trim Start (sec)
-                    </span>
-                    <input
-                      type="number"
-                      min={0}
-                      max={trimEnd}
-                      step={0.1}
-                      value={trimStart}
-                      onChange={(e) => {
-                        const val = parseFloat(e.target.value) || 0;
-                        handleTrimChange(Math.max(0, Math.min(val, trimEnd)), trimEnd);
-                      }}
-                      className="w-full bg-background border border-border rounded-lg px-2.5 py-1.5 text-xs text-text-primary focus:outline-none focus:border-accent/50 font-mono"
-                    />
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={handleSplitChunk}
+                      disabled={currentTime <= activeChunk.startTime + 0.5 || currentTime >= activeChunk.endTime - 0.5}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-1 rounded-lg text-[9px] font-bold border border-border hover:bg-border/40 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-all text-text-primary"
+                    >
+                      ✂️ Split Clip
+                    </button>
+                    <button
+                      onClick={() => handleMoveChunk("earlier")}
+                      disabled={selectedChunk === 0}
+                      className="px-2 py-1 rounded-lg border border-border hover:bg-border/40 disabled:opacity-40 text-[9px] font-bold text-text-primary"
+                    >
+                      ← Move
+                    </button>
+                    <button
+                      onClick={() => handleMoveChunk("later")}
+                      disabled={selectedChunk === chunks.length - 1}
+                      className="px-2 py-1 rounded-lg border border-border hover:bg-border/40 disabled:opacity-40 text-[9px] font-bold text-text-primary"
+                    >
+                      Move →
+                    </button>
                   </div>
-                  <div className="flex-1">
-                    <span className="text-[9px] font-mono font-bold text-text-muted uppercase block mb-1">
-                      Trim End (sec)
-                    </span>
-                    <input
-                      type="number"
-                      min={trimStart}
-                      max={chunk.duration}
-                      step={0.1}
-                      value={trimEnd}
-                      onChange={(e) => {
-                        const val = parseFloat(e.target.value) || chunk.duration;
-                        handleTrimChange(trimStart, Math.max(trimStart, Math.min(val, chunk.duration)));
-                      }}
-                      className="w-full bg-background border border-border rounded-lg px-2.5 py-1.5 text-xs text-text-primary focus:outline-none focus:border-accent/50 font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* Split and Reordering buttons */}
-                <div className="flex gap-2 items-center mt-3">
-                  <button
-                    onClick={handleSplitChunk}
-                    disabled={currentTime <= chunk.startTime + 0.5 || currentTime >= chunk.endTime - 0.5}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-border hover:bg-border/40 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-all text-text-primary"
-                    title={currentTime <= chunk.startTime + 0.5 || currentTime >= chunk.endTime - 0.5 ? "Move playhead to middle of clip to split" : "Split segment at playhead"}
-                  >
-                    ✂️ Split Clip
-                  </button>
-                  <button
-                    onClick={() => handleMoveChunk("earlier")}
-                    disabled={selectedChunk === 0}
-                    className="flex items-center justify-center px-3 py-1.5 rounded-lg border border-border hover:bg-border/40 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-all text-[10px] font-bold text-text-primary"
-                    title="Move segment earlier"
-                  >
-                    Move Up
-                  </button>
-                  <button
-                    onClick={() => handleMoveChunk("later")}
-                    disabled={selectedChunk === chunks.length - 1}
-                    className="flex items-center justify-center px-3 py-1.5 rounded-lg border border-border hover:bg-border/40 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-all text-[10px] font-bold text-text-primary"
-                    title="Move segment later"
-                  >
-                    Move Down
-                  </button>
                 </div>
               </div>
-            );
-          })()}
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center text-text-muted text-[11px] italic p-4 select-none">
+                Select a timeline segment below to view transcript and edit subtitles.
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Right: Timeline chunks & AI Prompt Sidebar */}
-        <div className="lg:w-[35%] flex flex-col min-h-0 border-l border-border bg-surface/10">
-          
-          {/* AI Prompt Editing Panel */}
-          <div className="p-4 border-b border-border bg-surface/30">
-            <span className="text-[10px] font-mono font-bold tracking-widest text-text-muted uppercase block mb-2">
-              ✨ Edit with AI Prompt
-            </span>
+        {/* Lower section: Horizontal Chunks Timeline + AI Prompt (frames & prompt) */}
+        <div className="shrink-0 border-t border-border bg-surface/50 p-4 space-y-4">
+
+          {/* Horizontal scrollable timeline track (labeled frames) */}
+          <div className="relative border border-border bg-background rounded-xl p-3">
+            <span className="absolute top-1 left-2 text-[8px] font-mono text-text-muted/65 uppercase tracking-wider">frames / segments</span>
+            <div
+              ref={timelineRef}
+              className="overflow-x-auto min-w-0 pt-2"
+            >
+              {chunks.length > 0 ? (
+                <>
+                  <div className="flex gap-1 items-end h-10 min-w-max">
+                    {chunks.map((chunk, i) => {
+                      const widthPct = (chunk.duration / totalDuration) * 100;
+                      const score = chunk.editManifest?.score ?? 5;
+                      const scoreH = Math.max(20, Math.round((score / 10) * 36));
+                      return (
+                        <div
+                          key={i}
+                          onClick={() => { seekToChunk(chunk); }}
+                          className={`cursor-pointer rounded-t shrink-0 transition-all duration-200 border-b-2 ${
+                            !chunk.userKeep
+                              ? "bg-zinc-800/40 border-t border-x border-zinc-700/20 hover:bg-zinc-800/60 opacity-40 border-b-red-500"
+                              : selectedChunk === i
+                              ? "bg-accent border-t border-x border-accent border-b-emerald-500"
+                              : score >= 7
+                              ? "bg-emerald-500/40 border-t border-x border-emerald-500/30 hover:bg-emerald-500/60 border-b-emerald-500"
+                              : "bg-purple-500/30 border-t border-x border-purple-500/20 hover:bg-purple-500/50 border-b-emerald-500"
+                          }`}
+                          style={{ width: `${Math.max(widthPct * 3.5, 25)}px`, height: `${scoreH}px` }}
+                          title={`Chunk ${i + 1} · Score ${score.toFixed(1)} · ${chunk.duration.toFixed(1)}s`}
+                        />
+                      );
+                    })}
+                  </div>
+                  {/* Time ruler */}
+                  <div className="flex gap-1 mt-1 min-w-max">
+                    {chunks.map((chunk, i) => {
+                      const widthPct = (chunk.duration / totalDuration) * 100;
+                      return (
+                        <div
+                          key={i}
+                          className="text-[8px] font-mono text-text-muted text-center shrink-0 overflow-hidden"
+                          style={{ width: `${Math.max(widthPct * 3.5, 25)}px` }}
+                        >
+                          {formatTime(chunk.startTime)}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <div className="py-4 text-center text-text-muted text-[10px] font-mono italic">
+                  Timeline is empty. Use the prompt input below to select clips from your uploaded assets.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* AI Prompt Input Bar (labeled prompt) */}
+          <div className="space-y-2 border-t border-border/40 pt-3">
             <div className="flex gap-2">
               <textarea
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
                 placeholder="Ask AI to edit this video... e.g. 'Cut first 5 seconds', 'Keep only React parts'"
-                rows={2}
-                className="flex-1 bg-background/60 border border-border rounded-xl px-3 py-2 text-xs text-text-primary resize-none focus:outline-none focus:border-accent/50 font-body placeholder:text-text-muted/50"
+                rows={1}
+                className="flex-1 bg-background border border-border rounded-xl px-4 py-2 text-xs text-text-primary resize-none focus:outline-none focus:border-accent/50 font-body placeholder:text-text-muted/50"
               />
               <button
                 onClick={handleAiPromptSubmit}
                 disabled={aiLoading || !aiPrompt.trim()}
-                className="px-4 py-2 bg-accent text-background font-bold text-xs rounded-xl hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all flex flex-col items-center justify-center min-w-[70px]"
+                className="px-5 py-2 bg-accent text-background font-bold text-xs rounded-xl hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center justify-center gap-1.5"
               >
                 {aiLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
-                  <span>Apply</span>
+                  <span>Apply AI Edit</span>
                 )}
               </button>
             </div>
-            
-            {/* Suggestions Chips */}
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {[
-                "Remove dead air",
-                "Keep only face-cam segments",
-                "Cut filler words",
-                "Keep high score only"
-              ].map(chip => (
-                <button
-                  key={chip}
-                  onClick={() => setAiPrompt(chip)}
-                  className="text-[9px] font-mono bg-background hover:bg-border/40 border border-border text-text-muted px-2 py-0.5 rounded transition-all cursor-pointer"
-                >
-                  {chip}
-                </button>
-              ))}
-            </div>
 
-            {/* AI Diff/Results Alert */}
-            {aiDiff.length > 0 && (
-              <div className="mt-3 bg-accent/5 border border-accent/20 rounded-xl p-3">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-mono font-bold text-accent">Last AI Edit Changes:</span>
+            {/* Suggestions Chips & Diffs */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  "Remove dead air",
+                  "Cut filler words",
+                  "Keep high score only"
+                ].map(chip => (
+                  <button
+                    key={chip}
+                    onClick={() => setAiPrompt(chip)}
+                    className="text-[9px] font-mono bg-background hover:bg-border/40 border border-border text-text-muted px-2 py-0.5 rounded transition-all cursor-pointer"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+              
+              {aiDiff.length > 0 && (
+                <div className="flex-1 bg-accent/5 border border-accent/20 rounded-lg px-3 py-1 flex items-center justify-between gap-4 text-[10px] font-mono">
+                  <span className="text-accent truncate">AI Edit Applied: {aiDiff.join(", ").substring(0, 100)}...</span>
                   <button 
                     onClick={() => setAiDiff([])}
-                    className="text-[9px] font-mono text-text-muted hover:text-text-primary cursor-pointer"
+                    className="text-text-muted hover:text-text-primary cursor-pointer shrink-0"
                   >
                     Clear
                   </button>
                 </div>
-                <ul className="list-disc pl-4 space-y-1">
-                  {aiDiff.map((d, i) => (
-                    <li key={i} className="text-[10px] font-mono text-text-muted">{d}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          <div className="px-5 py-3 border-b border-border flex items-center justify-between gap-4 flex-wrap">
-            <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
-              Timeline · {chunks.length} segments · Click to select, toggle to keep/cut
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={cutAllLowScore}
-                className="text-[10px] font-mono border border-border bg-transparent hover:bg-border/30 px-2.5 py-1 rounded transition-all text-text-muted hover:text-text-primary cursor-pointer"
-              >
-                Cut All Low Score
-              </button>
-              <button
-                onClick={keepAll}
-                className="text-[10px] font-mono border border-border bg-transparent hover:bg-border/30 px-2.5 py-1 rounded transition-all text-text-muted hover:text-text-primary cursor-pointer"
-              >
-                Keep All
-              </button>
-              <button
-                onClick={resetToAiSuggestions}
-                className="text-[10px] font-mono border border-border bg-transparent hover:bg-border/30 px-2.5 py-1 rounded transition-all text-text-muted hover:text-text-primary cursor-pointer"
-              >
-                Reset to AI Suggestions
-              </button>
+              )}
             </div>
           </div>
 
-          {/* Horizontal scrollable timeline */}
-          <div
-            ref={timelineRef}
-            className="p-4 overflow-x-auto shrink-0 border-b border-border"
-          >
-            <div className="flex gap-1 items-end h-12 min-w-max">
-              {chunks.map((chunk, i) => {
-                const widthPct = (chunk.duration / totalDuration) * 100;
-                const score = chunk.editManifest?.score ?? 5;
-                const scoreH = Math.max(30, Math.round((score / 10) * 48));
-                return (
-                  <div
-                    key={i}
-                    onClick={() => { seekToChunk(chunk); }}
-                    className={`cursor-pointer rounded-t shrink-0 transition-all duration-200 border-b-2 ${
-                      !chunk.userKeep
-                        ? "bg-zinc-800/40 border-t border-x border-zinc-700/20 hover:bg-zinc-800/60 opacity-40 border-b-red-500"
-                        : selectedChunk === i
-                        ? "bg-accent border-t border-x border-accent border-b-emerald-500"
-                        : score >= 7
-                        ? "bg-emerald-500/40 border-t border-x border-emerald-500/30 hover:bg-emerald-500/60 border-b-emerald-500"
-                        : "bg-purple-500/30 border-t border-x border-purple-500/20 hover:bg-purple-500/50 border-b-emerald-500"
-                    }`}
-                    style={{ width: `${Math.max(widthPct * 3, 20)}px`, height: `${scoreH}px` }}
-                    title={`Chunk ${i + 1} · Score ${score.toFixed(1)} · ${chunk.duration.toFixed(1)}s`}
-                  />
-                );
-              })}
-            </div>
-            {/* Time ruler */}
-            <div className="flex gap-1 mt-1 min-w-max">
-              {chunks.map((chunk, i) => {
-                const widthPct = (chunk.duration / totalDuration) * 100;
-                return (
-                  <div
-                    key={i}
-                    className="text-[8px] font-mono text-text-muted text-center shrink-0 overflow-hidden"
-                    style={{ width: `${Math.max(widthPct * 3, 20)}px` }}
-                  >
-                    {formatTime(chunk.startTime)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LeftSidebar({
+  project,
+  onUploadSuccess,
+}: {
+  project: Project | null;
+  onUploadSuccess: (p: Project) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  const handleUpload = async (files: FileList) => {
+    if (files.length === 0) return;
+    setUploading(true);
+    setProgress(0);
+    setError("");
+
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append("files", files[i]);
+    }
+
+    try {
+      const token = localStorage.getItem("Stedtio_token");
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${API}/api/video/${project?._id}/upload-assets`);
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            setProgress(Math.round((e.loaded / e.total) * 100));
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            const data = JSON.parse(xhr.responseText);
+            onUploadSuccess(data.project);
+            resolve();
+          } else {
+            const err = JSON.parse(xhr.responseText);
+            reject(new Error(err.error || "Upload failed"));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error("Network error"));
+        xhr.send(formData);
+      });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex || !project?.assets) return;
+    
+    const updatedAssets = [...project.assets];
+    const [draggedAsset] = updatedAssets.splice(draggedIndex, 1);
+    updatedAssets.splice(targetIndex, 0, draggedAsset);
+    
+    const updates = updatedAssets.map((asset, i) => ({
+      assetId: asset._id || asset.key,
+      order: i
+    }));
+    
+    const optimisticProject = {
+      ...project,
+      assets: updatedAssets.map((a, i) => ({ ...a, order: i }))
+    } as Project;
+    onUploadSuccess(optimisticProject);
+    
+    try {
+      const token = localStorage.getItem("Stedtio_token");
+      const res = await fetch(`${API}/api/video/${project._id}/assets/reorder`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ updates })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ok) {
+          onUploadSuccess({
+            ...project,
+            assets: data.assets
+          } as Project);
+        }
+      }
+    } catch (err) {
+      console.error("Reorder failed:", err);
+      onUploadSuccess(project);
+    } finally {
+      setDraggedIndex(null);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full p-4 gap-4 bg-surface/50 border-r border-border select-none shrink-0 w-full">
+      {/* Upload Zone */}
+      <div
+        onClick={() => !uploading && inputRef.current?.click()}
+        className={`border-2 border-dashed border-border hover:border-accent/50 bg-background/40 hover:bg-accent/3 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all text-center ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          accept="video/*,image/*"
+          className="hidden"
+          disabled={uploading}
+          onChange={(e) => { if (e.target.files) handleUpload(e.target.files); }}
+        />
+        <Upload className="w-5 h-5 text-text-muted animate-bounce" />
+        <span className="text-xs font-semibold text-text-primary">Upload Assets</span>
+        <span className="text-[9px] text-text-muted">Images or Videos</span>
+      </div>
+
+      {/* Progress */}
+      {uploading && (
+        <div className="space-y-1 bg-background border border-border p-2 rounded-lg">
+          <div className="flex justify-between text-[10px] font-mono">
+            <span className="text-text-muted">Uploading...</span>
+            <span className="text-accent">{progress}%</span>
+          </div>
+          <div className="h-1 bg-border rounded-full overflow-hidden">
+            <div className="h-full bg-accent transition-all duration-300" style={{ width: `${progress}%` }} />
+          </div>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <p className="text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-2 font-mono">
+          ⚠ {error}
+        </p>
+      )}
+
+      {/* Previews List */}
+      <div className="flex-1 flex flex-col min-h-0">
+        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider mb-2">Uploaded Assets</span>
+        <div className="flex-1 overflow-y-auto grid grid-cols-2 gap-2 content-start pr-1">
+          {project?.assets?.map((asset, i) => {
+            const isImage = asset.mimeType?.startsWith("image/");
+            const isDragging = draggedIndex === i;
+            const isPending = asset.status === "pending";
+            const isProcessing = asset.status === "processing";
+            const isError = asset.status === "error";
+
+            return (
+              <div
+                key={i}
+                draggable
+                onDragStart={(e) => handleDragStart(e, i)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, i)}
+                className={`group relative aspect-square bg-background border rounded-lg overflow-hidden flex flex-col justify-end cursor-grab active:cursor-grabbing transition-all ${
+                  isDragging ? "opacity-30 border-accent" : "border-border hover:border-accent/40"
+                }`}
+              >
+                {isImage ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={asset.url} alt={asset.filename} className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-text-muted gap-1 bg-zinc-950/20">
+                    <Video className={`w-6 h-6 ${isProcessing ? "text-accent animate-pulse" : isError ? "text-red-400 animate-bounce" : "text-accent"}`} />
+                    {isProcessing && <span className="text-[7px] text-accent font-mono font-bold animate-pulse">analyzing...</span>}
+                    {isPending && <span className="text-[7px] text-text-muted font-mono">queued...</span>}
+                    {isError && <span className="text-[7px] text-red-400 font-mono" title={asset.errorMessage}>error</span>}
                   </div>
-                );
-              })}
+                )}
+                {/* Filename overlay */}
+                <div className="relative z-10 bg-black/75 p-1.5 text-[8px] text-text-primary truncate border-t border-border/30 w-full" title={asset.filename}>
+                  {asset.filename}
+                </div>
+              </div>
+            );
+          })}
+          {(!project?.assets || project.assets.length === 0) && (
+            <div className="col-span-2 py-8 text-center text-text-muted text-[10px] italic">
+              No files uploaded yet
             </div>
-          </div>
-
-          {/* Chunk cards list */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {chunks.map((chunk, i) => (
-              <ChunkBlock
-                key={chunk.index}
-                chunk={chunk}
-                isActive={selectedChunk === i}
-                totalDuration={totalDuration}
-                onToggle={() => toggleChunk(i)}
-                onCaptionEdit={editCaption}
-                onSelect={() => seekToChunk(chunk)}
-              />
-            ))}
-          </div>
+          )}
         </div>
       </div>
     </div>
@@ -1535,6 +1721,7 @@ export default function EditorPage() {
   const [isRendering, setIsRendering] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const sseRef = useRef<EventSource | null>(null);
+  const connectSSERef = useRef<() => void>(() => {});
 
   // Load project
   const loadProject = useCallback(async () => {
@@ -1555,79 +1742,98 @@ export default function EditorPage() {
     return () => clearTimeout(timer);
   }, [loadProject]);
 
-  // SSE connection
-  useEffect(() => {
+  // SSE connection — extracted so we can reconnect after uploads
+  const connectSSE = useCallback(() => {
     if (!projectId) return;
+    // Close any existing connection
+    if (sseRef.current) {
+      sseRef.current.close();
+      sseRef.current = null;
+    }
 
-    const connect = () => {
-      const token = getToken();
-      const es = new EventSource(`${API}/api/video/${projectId}/status?token=${token}`);
-      sseRef.current = es;
+    const token = getToken();
+    const es = new EventSource(`${API}/api/video/${projectId}/status?token=${token}`);
+    sseRef.current = es;
 
-      es.onmessage = (e) => {
-        try {
-          const data = JSON.parse(e.data);
-          
-          if (data.type === "chunk_enriched" && data.chunk) {
-            setProject((prev) => {
-              if (!prev) return prev;
-              const newChunks = prev.chunks.map((c) => {
-                if (c.index === data.chunk.index) {
-                  return {
-                    ...c,
-                    yoloLabels: data.chunk.yoloLabels,
-                    userKeep: data.chunk.userKeep,
-                    editManifest: {
-                      ...c.editManifest,
-                      ...data.chunk.editManifest,
-                    },
-                  };
-                }
-                return c;
-              });
-              return { ...prev, chunks: newChunks };
+    es.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        
+        if (data.type === "chunk_enriched" && data.chunk) {
+          setProject((prev) => {
+            if (!prev) return prev;
+            const newChunks = prev.chunks.map((c) => {
+              if (c.index === data.chunk.index) {
+                return {
+                  ...c,
+                  yoloLabels: data.chunk.yoloLabels,
+                  userKeep: data.chunk.userKeep,
+                  editManifest: {
+                    ...c.editManifest,
+                    ...data.chunk.editManifest,
+                  },
+                };
+              }
+              return c;
             });
-            return;
-          }
+            return { ...prev, chunks: newChunks };
+          });
+          return;
+        }
 
-          if (data.type === "enrichment_complete") {
-            setProject((prev) => {
-              if (!prev) return prev;
-              return { ...prev, aiEnriched: true };
-            });
-            return;
-          }
+        if (data.type === "enrichment_complete") {
+          setProject((prev) => {
+            if (!prev) return prev;
+            return { ...prev, aiEnriched: true };
+          });
+          return;
+        }
 
-          const sseEvent = data as SSEEvent;
-          setSse(sseEvent);
-          
-          if (sseEvent.status === "review" || sseEvent.status === "done" || sseEvent.status === "error") {
-            loadProject();
-          }
-          if (sseEvent.status === "cancelled") {
-            loadProject();
-            es.close();
-          }
-          if (sseEvent.status === "done" || sseEvent.status === "error") {
-            setIsRendering(false);
-            es.close();
-          }
-        } catch {}
-      };
+        if (data.type === "asset_status_change") {
+          loadProject();
+          return;
+        }
 
-      es.onerror = () => {
-        es.close();
-        setTimeout(connect, 3000);
-      };
+        const sseEvent = data as SSEEvent;
+        setSse(sseEvent);
+        
+        if (sseEvent.status === "review" || sseEvent.status === "done" || sseEvent.status === "error") {
+          loadProject();
+        }
+        if (sseEvent.status === "cancelled") {
+          loadProject();
+          es.close();
+        }
+        if (sseEvent.status === "done" || sseEvent.status === "error") {
+          setIsRendering(false);
+          es.close();
+        }
+      } catch {}
     };
 
-    connect();
-    return () => sseRef.current?.close();
+    es.onerror = () => {
+      es.close();
+      setTimeout(() => connectSSERef.current(), 3000);
+    };
   }, [projectId, loadProject]);
 
-  // Note: SSE uses query param for auth since EventSource doesn't support headers
-  // The backend SSE endpoint needs to also accept ?token= query param
-  // For now it works because we fallback to DB lookup
+  // Keep ref in sync so onerror retry always calls the latest version
+  useEffect(() => {
+    connectSSERef.current = connectSSE;
+  }, [connectSSE]);
+
+  useEffect(() => {
+    connectSSE();
+    return () => sseRef.current?.close();
+  }, [connectSSE]);
+
+  // Reconnect SSE and clear stale state (used after uploads trigger new processing)
+  const reconnectSSE = useCallback(() => {
+    setSse(null); // Clear stale SSE status so project.status takes over
+    setIsRendering(false);
+    setIsCancelling(false);
+    connectSSE();
+  }, [connectSSE]);
 
   const handleApprove = async (
     editedChunks: Chunk[],
@@ -1731,41 +1937,92 @@ export default function EditorPage() {
         </div>
       </header>
 
-      {/* Body */}
-      {isError && <ErrorView message={project?.errorMessage || sse?.message || "Unknown error"} />}
-      {isCancelled && (
-        <div className="flex-1 flex flex-col items-center justify-center p-8 gap-6">
-          <div className="w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center">
-            <StopCircle className="w-8 h-8 text-yellow-400" />
-          </div>
-          <div className="text-center">
-            <h2 className="text-xl font-bold text-yellow-400">Processing Cancelled</h2>
-            <p className="text-sm text-text-muted mt-2">Pipeline was stopped. You can upload again.</p>
-          </div>
-          <Link href="/dashboard" className="px-6 py-2.5 bg-accent text-background rounded-lg text-sm font-bold hover:brightness-110 transition-all">
-            Back to Dashboard
-          </Link>
+      {/* Main Workspace Layout */}
+      <div className="flex-1 flex min-h-0 overflow-hidden">
+        {/* Left Sidebar */}
+        <div className="w-72 bg-surface border-r border-border flex flex-col min-h-0 shrink-0">
+          <LeftSidebar
+            project={project}
+            onUploadSuccess={(updatedProject) => {
+              setProject(updatedProject);
+              // Reset stale SSE and reconnect so frontend tracks the new processing status
+              reconnectSSE();
+            }}
+          />
         </div>
-      )}
-      {isDone && !isRendering && project && <RenderDoneView project={project} />}
-      {isRendering && (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <RefreshCw className="w-12 h-12 animate-spin text-accent mx-auto" />
-            <p className="text-lg font-bold text-text-primary">Rendering your video…</p>
-            <p className="text-sm text-text-muted font-mono">{sse?.message || "Combining segments..."}</p>
-            <div className="w-64 h-1.5 bg-border rounded-full overflow-hidden mx-auto">
-              <div className="h-full bg-accent rounded-full transition-all duration-700" style={{ width: `${sse?.progress || 10}%` }} />
+
+        {/* Right Main Panel */}
+        <div className="flex-1 flex flex-col min-h-0 bg-background overflow-hidden relative">
+          {isError && <ErrorView message={project?.errorMessage || sse?.message || "Unknown error"} />}
+          {isCancelled && (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 gap-6">
+              <div className="w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center">
+                <StopCircle className="w-8 h-8 text-yellow-400" />
+              </div>
+              <div className="text-center">
+                <h2 className="text-xl font-bold text-yellow-400">Processing Cancelled</h2>
+                <p className="text-sm text-text-muted mt-2">Pipeline was stopped. You can upload again.</p>
+              </div>
+              <Link href="/dashboard" className="px-6 py-2.5 bg-accent text-background rounded-lg text-sm font-bold hover:brightness-110 transition-all">
+                Back to Dashboard
+              </Link>
             </div>
-          </div>
+          )}
+          {isDone && !isRendering && project && (
+            <RenderDoneView 
+              project={project} 
+              onReEdit={async () => {
+                try {
+                  const token = localStorage.getItem("Stedtio_token");
+                  const res = await fetch(`${API}/api/video/${project._id}/manifest`, {
+                    method: "PATCH",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ status: "review" }),
+                  });
+                  if (res.ok) {
+                    loadProject();
+                  }
+                } catch (err) {
+                  console.error("Failed to re-edit project:", err);
+                }
+              }}
+            />
+          )}
+          {isRendering && (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center space-y-4">
+                <RefreshCw className="w-12 h-12 animate-spin text-accent mx-auto" />
+                <p className="text-lg font-bold text-text-primary font-display">Rendering your video…</p>
+                <p className="text-sm text-text-muted font-mono">{sse?.message || "Combining segments..."}</p>
+                <div className="w-64 h-1.5 bg-border rounded-full overflow-hidden mx-auto">
+                  <div className="h-full bg-accent rounded-full transition-all duration-700" style={{ width: `${sse?.progress || 10}%` }} />
+                </div>
+                <FunnyNotice />
+              </div>
+            </div>
+          )}
+          {isProcessing && !isRendering && (
+            <ProcessingView sse={sse} projectName={project?.name || "Your Video"} onCancel={handleCancel} isCancelling={isCancelling} />
+          )}
+          {currentStatus === "review" && !isRendering && (!project || ((!project.chunks || project.chunks.length === 0) && (!project.assets || project.assets.length === 0))) && (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4 bg-background">
+              <div className="w-16 h-16 rounded-2xl bg-accent/15 border border-accent/30 text-accent flex items-center justify-center mb-2">
+                <Video className="w-8 h-8 animate-[pulse_2s_infinite]" />
+              </div>
+              <h2 className="text-lg font-bold text-text-primary font-display">No assets uploaded yet</h2>
+              <p className="text-xs text-text-muted max-w-sm">
+                Upload video or image assets in the left sidebar to start AI editing. Stedtio will automatically analyze and let you edit them using prompts.
+              </p>
+            </div>
+          )}
+          {currentStatus === "review" && project && !isRendering && ((project.chunks && project.chunks.length > 0) || (project.assets && project.assets.length > 0)) && (
+            <TimelineReview project={project} onApprove={handleApprove} isRendering={isRendering} />
+          )}
         </div>
-      )}
-      {isProcessing && !isRendering && (
-        <ProcessingView sse={sse} projectName={project?.name || "Your Video"} onCancel={handleCancel} isCancelling={isCancelling} />
-      )}
-      {currentStatus === "review" && project && project.chunks && project.chunks.length > 0 && !isRendering && (
-        <TimelineReview project={project} onApprove={handleApprove} isRendering={isRendering} />
-      )}
+      </div>
     </div>
   );
 }

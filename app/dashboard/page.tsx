@@ -20,18 +20,37 @@ import {
   Loader2,
   ArrowRight,
 } from "lucide-react";
-import VideoUploadModal from "../../components/VideoUploadModal";
-
-
-
-
-
 export default function Dashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"overview" | "video" | "writer" | "thumbnail">("overview");
   const [userName, setUserName] = useState("Creator");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [creatingProject, setCreatingProject] = useState(false);
+
+  const handleCreateBlankProject = async () => {
+    if (creatingProject) return;
+    setCreatingProject(true);
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("Stedtio_token") : null;
+      const res = await fetch("http://localhost:5000/api/video/create-blank", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        router.push(`/dashboard/editor/${data._id}`);
+      } else {
+        alert("Failed to create a new project");
+        setCreatingProject(false);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error creating new project");
+      setCreatingProject(false);
+    }
+  };
 
   // Project list state
   interface ProjectItem { _id: string; name: string; status: string; originalFilename: string; createdAt: string; }
@@ -205,9 +224,14 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen bg-background text-text-primary overflow-hidden font-body relative">
-      {/* Upload Modal */}
-      {showUploadModal && (
-        <VideoUploadModal onClose={() => { setShowUploadModal(false); fetchProjects(); }} />
+      {/* Creating Project Overlay */}
+      {creatingProject && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center z-50">
+          <div className="bg-surface border border-border p-6 rounded-2xl flex flex-col items-center gap-3 shadow-2xl">
+            <Loader2 className="w-8 h-8 text-accent animate-spin" />
+            <p className="text-xs font-bold text-text-primary font-mono">Initializing Studio Workspace...</p>
+          </div>
+        </div>
       )}
 
       {/* Glow effects in the background */}
@@ -376,7 +400,7 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setShowUploadModal(true)}
+                  onClick={handleCreateBlankProject}
                   className="px-4 py-2 bg-accent text-background font-bold text-xs rounded-lg flex items-center gap-1.5 transition-all hover:brightness-110 cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
@@ -402,7 +426,7 @@ export default function Dashboard() {
                   </div>
 
                   <button
-                    onClick={() => setShowUploadModal(true)}
+                    onClick={handleCreateBlankProject}
                     className="w-full mt-8 py-2.5 rounded-lg bg-accent text-background font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:brightness-110"
                   >
                     Upload & Start AI Edit
@@ -480,7 +504,7 @@ export default function Dashboard() {
                     <Video className="w-8 h-8 text-text-muted mx-auto mb-3" />
                     <p className="text-sm text-text-muted">No projects yet</p>
                     <button
-                      onClick={() => setShowUploadModal(true)}
+                      onClick={handleCreateBlankProject}
                       className="mt-3 text-xs text-accent hover:underline cursor-pointer"
                     >
                       Upload your first video →
@@ -546,7 +570,7 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setShowUploadModal(true)}
+                  onClick={handleCreateBlankProject}
                   className="px-4 py-2.5 bg-accent text-background font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-all hover:brightness-110 cursor-pointer shadow-lg shadow-accent/10"
                 >
                   <Plus className="w-4 h-4" />
@@ -569,7 +593,7 @@ export default function Dashboard() {
                     Upload a raw video, and Stedtio AI will automatically split scenes, remove silent gaps, transcribe dialogue, and create caption clips for your review.
                   </p>
                   <button
-                    onClick={() => setShowUploadModal(true)}
+                    onClick={handleCreateBlankProject}
                     className="mt-4 px-4 py-2 bg-accent text-background font-bold text-xs rounded-lg hover:brightness-110 transition-all cursor-pointer inline-flex items-center gap-1.5"
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -582,7 +606,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {/* Upload Card */}
                   <div
-                    onClick={() => setShowUploadModal(true)}
+                    onClick={handleCreateBlankProject}
                     className="group border border-dashed border-border hover:border-accent/40 bg-surface/40 hover:bg-accent/3 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all gap-3 select-none min-h-[160px]"
                   >
                     <div className="w-11 h-11 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent group-hover:scale-105 transition-transform">
