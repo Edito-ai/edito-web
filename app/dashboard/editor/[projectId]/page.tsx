@@ -8,6 +8,7 @@ import {
   Loader2, Scissors, Sparkles, RefreshCw, AlertCircle,
   FileText, Cloud, Home, StopCircle, Upload, Video
 } from "lucide-react";
+import ClipDiscoveryScreen from "@/components/ClipDiscoveryScreen";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Caption {
@@ -32,6 +33,8 @@ interface EditManifest {
 }
 
 interface Chunk {
+  id?: string;
+  _id?: string;
   index: number;
   startTime: number;
   endTime: number;
@@ -71,8 +74,20 @@ interface Project {
   captionStyle?: "kinetic" | "karaoke" | "minimal";
   captionSize?: "small" | "medium" | "large" | "xlarge";
   captionFontSize?: number;
+  captionsEnabled?: boolean;
   aiEnriched?: boolean;
   assets?: Asset[];
+  clip_recommendations?: {
+    label: "short_form" | "long_form" | "hook_moment";
+    segment_id: string;
+    start_time: number;
+    end_time: number;
+    confidence: number;
+    display_reason: string;
+    clip_url: string;
+    thumbnail_url: string;
+    status: string;
+  }[];
 }
 
 interface SSEEvent {
@@ -430,10 +445,16 @@ function TimelineReview({
   project,
   onApprove,
   isRendering,
+  initialSelectedChunkId,
+  initialStartTime,
+  onEnableCaptions,
 }: {
   project: Project;
   onApprove: (chunks: Chunk[], style: "kinetic" | "karaoke" | "minimal", size: "small" | "medium" | "large" | "xlarge", fontSize: number) => void;
   isRendering: boolean;
+  initialSelectedChunkId?: string;
+  initialStartTime?: number;
+  onEnableCaptions: () => Promise<void>;
 }) {
   const [chunks, setChunks] = useState<Chunk[]>(project.chunks || []);
   const [prevProjectChunks, setPrevProjectChunks] = useState<Chunk[]>(project.chunks || []);
@@ -453,6 +474,7 @@ function TimelineReview({
             score: pc.editManifest?.score ?? prevChunk.editManifest?.score,
             keep: pc.editManifest?.keep || prevChunk.editManifest?.keep,
             keepGlobal: pc.editManifest?.keepGlobal || prevChunk.editManifest?.keepGlobal,
+            captions: pc.editManifest?.captions || prevChunk.editManifest?.captions || [],
           },
           userKeep: pc.userKeep !== undefined ? pc.userKeep : prevChunk.userKeep,
         };
@@ -460,9 +482,15 @@ function TimelineReview({
     });
   }
 
-  const [selectedChunk, setSelectedChunk] = useState<number | null>(null);
+  const [selectedChunk, setSelectedChunk] = useState<number | null>(() => {
+    if (initialSelectedChunkId) {
+      const idx = (project.chunks || []).findIndex(c => c.id === initialSelectedChunkId || c._id === initialSelectedChunkId);
+      if (idx !== -1) return idx;
+    }
+    return null;
+  });
   const [videoPlay, setVideoPlay] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
+  const [currentTime, setCurrentTime] = useState(initialStartTime || 0);
   const [skipCuts, setSkipCuts] = useState(false); // Play all chunks by default, toggle to skip cut segments
   const [captionStyle] = useState<"kinetic" | "karaoke" | "minimal">(project.captionStyle || "kinetic");
   const [captionSize] = useState<"small" | "medium" | "large" | "xlarge">(project.captionSize || "medium");
@@ -1076,6 +1104,16 @@ function TimelineReview({
           >
             Reset AI
           </button>
+          {!project.captionsEnabled && (
+            <button
+              onClick={onEnableCaptions}
+              className="text-[10px] font-mono border border-accent/30 bg-accent/5 hover:bg-accent/15 px-2.5 py-1.5 rounded transition-all text-accent cursor-pointer flex items-center gap-1 shrink-0 animate-[pulse_2s_infinite]"
+              style={{ animationDuration: "3s" }}
+            >
+              <FileText className="w-3 h-3" />
+              Add Captions
+            </button>
+          )}
           <div className="w-px h-4 bg-border mx-1" />
           <button
             onClick={() => onApprove(chunks, captionStyle, captionSize, captionFontSize)}
@@ -1720,6 +1758,9 @@ export default function EditorPage() {
   const [sse, setSse] = useState<SSEEvent | null>(null);
   const [isRendering, setIsRendering] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
+  const [preselectedChunkId, setPreselectedChunkId] = useState<string | undefined>(undefined);
+  const [preselectedStartTime, setPreselectedStartTime] = useState<number | undefined>(undefined);
   const sseRef = useRef<EventSource | null>(null);
   const connectSSERef = useRef<() => void>(() => {});
 
@@ -1758,6 +1799,13 @@ export default function EditorPage() {
     es.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data);
+        
+        if (data.stage === "clips_ready") {
+          loadProject();
+          setSse(data);
+          es.close();
+          return;
+        }
         
         if (data.type === "chunk_enriched" && data.chunk) {
           setProject((prev) => {
@@ -1896,6 +1944,24 @@ export default function EditorPage() {
     }
   };
 
+  const handleEnableCaptions = async () => {
+    try {
+      const res = await fetch(`${API}/api/projects/${projectId}/captions`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ enabled: true }),
+      });
+      if (res.ok) {
+        await loadProject();
+      }
+    } catch (err) {
+      console.error("Failed to enable captions:", err);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-background text-text-primary overflow-hidden font-body flex-col">
       {/* Header */}
@@ -2019,7 +2085,25 @@ export default function EditorPage() {
             </div>
           )}
           {currentStatus === "review" && project && !isRendering && ((project.chunks && project.chunks.length > 0) || (project.assets && project.assets.length > 0)) && (
-            <TimelineReview project={project} onApprove={handleApprove} isRendering={isRendering} />
+            (project.clip_recommendations && project.clip_recommendations.length > 0 && !showTimeline) ? (
+              <ClipDiscoveryScreen
+                recommendations={project.clip_recommendations}
+                onEditInTimeline={(segmentId, startTime) => {
+                  setPreselectedChunkId(segmentId);
+                  setPreselectedStartTime(startTime);
+                  setShowTimeline(true);
+                }}
+              />
+            ) : (
+              <TimelineReview
+                project={project}
+                onApprove={handleApprove}
+                isRendering={isRendering}
+                initialSelectedChunkId={preselectedChunkId}
+                initialStartTime={preselectedStartTime}
+                onEnableCaptions={handleEnableCaptions}
+              />
+            )
           )}
         </div>
       </div>
